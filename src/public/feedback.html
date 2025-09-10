@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feedback - Health Monitor</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f9fa; padding: 2rem; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 8px; }
+    textarea, input, button {
+      width: 100%; margin-top: 1rem; padding: 0.8rem;
+    }
+    button {
+      background: #007bff; color: white; border: none; cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Feedback</h2>
+    <p>We’d love to hear from you! Tell us what to improve or add.</p>
+    <form id="feedbackForm">
+      <textarea id="message" placeholder="Your feedback..." required></textarea>
+      <button type="submit">Send Feedback</button>
+    </form>
+    <div id="response"></div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token"); // user must be logged in
+    document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = document.getElementById("message").value;
+
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+      document.getElementById("response").innerText = data.message;
+    });
+  </script>
+</body>
+</html>
