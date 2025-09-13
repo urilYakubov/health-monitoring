@@ -4,7 +4,8 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-	"init-db": "node src/config/dbInit.js"
+	"init-db": "node src/config/dbInit.js",
+	"postinstall": "npm run init-db"
   },
   "keywords": [],
   "author": "",
