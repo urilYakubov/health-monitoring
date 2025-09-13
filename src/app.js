@@ -10,7 +10,14 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-require('./config/db'); // DB connection
+require('./config/db'); // DB connection// ✅ Auto-create tables when server starts
+
+const initDb = require('./config/dbInit');
+initDb()
+  .then(() => console.log("✅ Database initialized"))
+  .catch(err => console.error("❌ DB init failed:", err));
+
+
 
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
