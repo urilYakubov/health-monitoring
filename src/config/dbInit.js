@@ -49,7 +49,6 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     );
 
-    DROP TABLE user_integrations;
     CREATE TABLE IF NOT EXISTS user_integrations (
       id SERIAL PRIMARY KEY,
       user_id INT REFERENCES users(id),
