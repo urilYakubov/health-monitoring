@@ -28,6 +28,19 @@ async function initDb() {
       reason TEXT,
       created_at TIMESTAMP DEFAULT NOW()
     );
+	
+	
+	CREATE TABLE IF NOT EXISTS anomalies ( 
+		id SERIAL PRIMARY KEY, 
+		user_id INT REFERENCES users(id), 
+		metric_type TEXT, 
+		value NUMERIC, 
+		avg NUMERIC, 
+		std_dev NUMERIC, 
+		z_score NUMERIC, 
+		threshold NUMERIC, 
+		created_at TIMESTAMP DEFAULT NOW() 
+	);
 
     CREATE TABLE IF NOT EXISTS feedback (
       id SERIAL PRIMARY KEY,
@@ -36,13 +49,16 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     );
 
+    DROP TABLE user_integrations;
     CREATE TABLE IF NOT EXISTS user_integrations (
       id SERIAL PRIMARY KEY,
       user_id INT REFERENCES users(id),
       provider TEXT NOT NULL,
       access_token TEXT NOT NULL,
       refresh_token TEXT,
-      expires_at TIMESTAMP
+      expires_at TIMESTAMP,
+	  created_at TIMESTAMP DEFAULT NOW(),
+	  updated_at TIMESTAMP
     );
   `);
 }
