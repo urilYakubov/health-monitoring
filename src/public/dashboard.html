@@ -6,271 +6,147 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <title>Health Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; background-color: #f9f9f9; }
-    h1 { color: #333; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f8; color: #333; }
+    header {
+      background: #2c3e50;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 1rem;
+    }
+    nav a:hover { text-decoration: underline; }
+    .container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h1 { color: #2c3e50; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
     th { background-color: #eee; }
-    form { margin-bottom: 2rem; }
-    input, select, button { padding: 8px; margin: 5px; }
     .alert-row { background-color: #ffe5e5; }
-    .logout { float: right; }
+    form { margin: 1.5rem 0; }
+    input, select, button { padding: 8px; margin: 5px; }
+    button {
+      padding: 0.6rem 1rem;
+      background: #16a085;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #13856b; }
   </style>
 </head>
 <body>
-  <button class="logout" onclick="logout()">Logout</button>
-  <h1>📊 Health Dashboard</h1>
-  
-  <!-- Navigation -->
-  <nav>
-    <a href="about.html" target="_blank">About</a> |
-    <a href="feedback.html">Feedback</a>
-  </nav>
-  <br/>
+  <header>
+    <h2>Health Monitoring</h2>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="about.html">About</a>
+      <a href="feedback.html">Feedback</a>
+      <a href="login.html" onclick="logout()">Logout</a>
+    </nav>
+  </header>
 
-  <!-- Connect Fitbit button -->
-  <button id="connectFitbit">Connect Fitbit</button>
-  
-  <!-- Connect Withings button -->
-  <button id="connectWithings">Connect Withings</button>
+  <div class="container">
+    <h1>📊 Health Dashboard</h1>
 
-  <form id="metricForm">
-    <label>Type:
-      <select name="metricType" required>
-        <option value="temperature">Temperature</option>
-        <option value="heart_rate">Heart Rate</option>
-        <option value="blood_pressure_systolic">Blood Pressure Systolic</option>
-        <option value="blood_pressure_diastolic">Blood Pressure Diastolic</option>
-        <option value="blood_sugar">Blood Sugar</option>
-      </select>
-    </label>
-    <label>Value:
-      <input type="number" step="0.1" name="value" required />
-    </label>
-    <button type="submit">➕ Submit Metric</button>
-  </form>
+    <div>
+      <button id="connectFitbit">Connect Fitbit</button>
+      <button id="connectWithings">Connect Withings</button>
+    </div>
 
-  <table id="metricsTable">
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Value</th>
-        <th>Alert</th>
-        <th>Recorded At</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  
-  <h2>📈 Heart Rate Trend</h2>
-	<canvas id="heartRateChart" width="400" height="200"></canvas>
+    <form id="metricForm">
+      <label>Type:
+        <select name="metricType" required>
+          <option value="temperature">Temperature</option>
+          <option value="heart_rate">Heart Rate</option>
+          <option value="blood_pressure_systolic">Blood Pressure Systolic</option>
+          <option value="blood_pressure_diastolic">Blood Pressure Diastolic</option>
+          <option value="blood_sugar">Blood Sugar</option>
+        </select>
+      </label>
+      <label>Value:
+        <input type="number" step="0.1" name="value" required />
+      </label>
+      <button type="submit">➕ Submit Metric</button>
+    </form>
 
-  <h2>🚨 Alert History</h2>
-  <table id="alertsTable">
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Value</th>
-        <th>Reason</th>
-        <th>Created At</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  
-  <canvas id="alertsChart" width="400" height="200"></canvas>
+    <h2>Metrics</h2>
+    <table id="metricsTable">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Value</th>
+          <th>Alert</th>
+          <th>Recorded At</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>📈 Heart Rate Trend</h2>
+    <canvas id="heartRateChart" width="400" height="200"></canvas>
+
+    <h2>🚨 Alert History</h2>
+    <table id="alertsTable">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Value</th>
+          <th>Reason</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <canvas id="alertsChart" width="400" height="200"></canvas>
+  </div>
 
   <script>
     const token = localStorage.getItem('token');
     if (!token) window.location.href = 'login.html';
 
-    // ---- FITBIT POPUP AUTH ----
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = "login.html";
+    }
+
+    // ✅ Keep your existing Fitbit/Withings popup logic
     document.getElementById('connectFitbit').addEventListener('click', () => {
       const popup = window.open(`/connect-fitbit?jwt=${token}`, 'fitbitAuth', 'width=600,height=600');
-
-      // Listen for message from popup after OAuth
       window.addEventListener('message', (event) => {
         if (event.data === 'fitbit-connected') {
           popup.close();
-          fetchMetrics(); // reload table after connection
+          fetchMetrics(); 
           alert('✅ Fitbit connected!');
         }
       });
     });
-	
-	// ---- WITHINGS POPUP AUTH ----
-	document.getElementById('connectWithings').addEventListener('click', () => {
-	  const popup = window.open(`/connect-withings?jwt=${token}`, 'withingsAuth', 'width=600,height=600');
 
-	  // Listen for message from popup after OAuth
-	  window.addEventListener('message', (event) => {
-		if (event.data === 'withings-connected') {
-		  popup.close();
-		  fetchMetrics(); // reload table after connection
-		  alert('✅ Withings connected!');
-		}
-	  });
-	});
-
-    async function fetchMetrics() {
-      const res = await fetch('/api/metrics', { headers: { Authorization: 'Bearer ' + token } });
-      const metrics = await res.json();
-      const tbody = document.querySelector('#metricsTable tbody');
-      tbody.innerHTML = '';
-      metrics.forEach(metric => {
-        const row = document.createElement('tr');
-        if (metric.alert) row.classList.add('alert-row');
-        row.innerHTML = `
-          <td>${metric.metric_type}</td>
-          <td>${metric.value}</td>
-          <td>${metric.alert ?? ''}</td>
-          <td>${metric.recorded_at ? new Date(metric.recorded_at.split('.')[0]).toLocaleString() : 'N/A'}</td>
-        `;
-        tbody.appendChild(row);
+    document.getElementById('connectWithings').addEventListener('click', () => {
+      const popup = window.open(`/connect-withings?jwt=${token}`, 'withingsAuth', 'width=600,height=600');
+      window.addEventListener('message', (event) => {
+        if (event.data === 'withings-connected') {
+          popup.close();
+          fetchMetrics();
+          alert('✅ Withings connected!');
+        }
       });
-    }
-	
-	let heartRateChart;
-
-	async function drawHeartRateChart() {
-	  const res = await fetch('/api/metrics', { headers: { Authorization: 'Bearer ' + token } });
-	  const metrics = await res.json();
-
-	  // Filter only heart_rate
-	  const heartRates = metrics.filter(m => m.metric_type === 'heart_rate');
-
-	  // Sort by recorded_at
-	  heartRates.sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
-
-	  const labels = heartRates.map(m => new Date(m.recorded_at).toLocaleString());
-	  const values = heartRates.map(m => Number(m.value));
-
-	  const ctx = document.getElementById('heartRateChart').getContext('2d');
-
-	  if (heartRateChart) {
-		heartRateChart.destroy(); // refresh if exists
-	  }
-
-	  heartRateChart = new Chart(ctx, {
-		type: 'line',
-		data: {
-		  labels,
-		  datasets: [{
-			label: 'Heart Rate',
-			data: values,
-			borderColor: 'red',
-			fill: false,
-			tension: 0.1
-		  }]
-		},
-		options: {
-		  responsive: true,
-		  plugins: {
-			legend: { display: true }
-		  },
-		  scales: {
-			x: { title: { display: true, text: 'Time' }},
-			y: { title: { display: true, text: 'BPM' }}
-		  }
-		}
-	  });
-	}
-	
-	let alertsChart;
-
-    async function fetchAlerts() {
-      const res = await fetch('/api/alerts', { headers: { Authorization: 'Bearer ' + token } });
-      const alerts = await res.json();
-      const tbody = document.querySelector('#alertsTable tbody');
-      tbody.innerHTML = '';
-      alerts.forEach(alert => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${alert.metric_type}</td>
-          <td>${alert.value}</td>
-          <td>${alert.reason}</td>
-          <td>${new Date(alert.created_at).toLocaleString()}</td>
-        `;
-        tbody.appendChild(row);
-      });
-	  
-	  // --- Prepare grouped data for chart ---
-	const grouped = {};
-	alerts.forEach(a => {
-	  const label = new Date(a.created_at).toLocaleString();
-	  if (!grouped[a.metric_type]) {
-		grouped[a.metric_type] = { labels: [], values: [] };
-	  }
-	  grouped[a.metric_type].labels.push(label);
-	  grouped[a.metric_type].values.push(a.value);
-	});
-
-	// Define fixed colors for each metric type
-	const metricColors = {
-	  heart_rate: 'red',
-	  temperature: 'orange',
-	  blood_pressure_systolic: 'blue',
-	  blood_pressure_diastolic: 'green',
-	  blood_sugar: 'purple'
-	};
-
-	const datasets = Object.entries(grouped).map(([metric, data]) => ({
-	  label: metric,
-	  data: data.values,
-	  borderColor: metricColors[metric] || 'gray',
-	  backgroundColor: metricColors[metric] || 'gray',
-	  fill: false,
-	  tension: 0.2
-	}));
-
-	// Labels = timeline (we assume first metric's labels for simplicity)
-	const labels = Object.values(grouped)[0]?.labels || [];
-
-	const ctx = document.getElementById('alertsChart').getContext('2d');
-	if (alertsChart) alertsChart.destroy();
-
-	alertsChart = new Chart(ctx, {
-	  type: 'line',
-	  data: { labels, datasets },
-	  options: {
-		responsive: true,
-		plugins: {
-		  legend: { display: true },
-		  title: { display: true, text: '🚨 Alerts Over Time (by Metric)' }
-		},
-		scales: {
-		  y: { beginAtZero: true }
-		}
-	  }
-	});
-	  
-    }
-	
-	
-
-    document.getElementById('metricForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const data = {
-        metricType: form.metricType.value,
-        value: parseFloat(form.value.value)
-      };
-      const res = await fetch('/api/metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify(data)
-      });
-      if (res.ok) { form.reset(); fetchMetrics().then(drawHeartRateChart); }
-      else alert('Failed to submit metric');
     });
 
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    }
-
-    fetchMetrics().then(drawHeartRateChart);
-    fetchAlerts();
+    // ✅ Keep your metrics + charts code here...
+    // (reuse what you already had in your working dashboard.html)
   </script>
 </body>
 </html>
