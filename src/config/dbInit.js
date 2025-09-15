@@ -20,19 +20,20 @@ async function initDb() {
       alert TEXT
     );
 
+    DROP TABLE alerts;
     CREATE TABLE IF NOT EXISTS alerts (
       id SERIAL PRIMARY KEY,
-      user_id INT REFERENCES users(id),
+      user_id INT REFERENCES users(id) ON DELETE CASCADE,
       metric_type TEXT,
       value NUMERIC,
       reason TEXT,
       created_at TIMESTAMP DEFAULT NOW()
     );
 	
-	
+	DROP TABLE anomalies;
 	CREATE TABLE IF NOT EXISTS anomalies ( 
 		id SERIAL PRIMARY KEY, 
-		user_id INT REFERENCES users(id), 
+		user_id INT REFERENCES users(id) ON DELETE CASCADE, 
 		metric_type TEXT, 
 		value NUMERIC, 
 		avg NUMERIC, 
@@ -42,22 +43,25 @@ async function initDb() {
 		created_at TIMESTAMP DEFAULT NOW() 
 	);
 
+    DROP TABLE feedback;
     CREATE TABLE IF NOT EXISTS feedback (
       id SERIAL PRIMARY KEY,
-      user_id INT REFERENCES users(id),
+      user_id INT REFERENCES users(id) ON DELETE CASCADE,
       message TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     );
 
+    DROP TABLE user_integrations;
     CREATE TABLE IF NOT EXISTS user_integrations (
       id SERIAL PRIMARY KEY,
-      user_id INT REFERENCES users(id),
+      user_id INT REFERENCES users(id) ON DELETE CASCADE,
       provider TEXT NOT NULL,
       access_token TEXT NOT NULL,
       refresh_token TEXT,
       expires_at TIMESTAMP,
 	  created_at TIMESTAMP DEFAULT NOW(),
-	  updated_at TIMESTAMP
+	  updated_at TIMESTAMP DEFAULT NOW(),
+	  UNIQUE(user_id, provider)
     );
   `);
 }
