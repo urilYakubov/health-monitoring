@@ -20,7 +20,6 @@ async function initDb() {
       alert TEXT
     );
 
-    DROP TABLE alerts;
     CREATE TABLE IF NOT EXISTS alerts (
       id SERIAL PRIMARY KEY,
       user_id INT REFERENCES users(id) ON DELETE CASCADE,
@@ -30,7 +29,6 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     );
 	
-	DROP TABLE anomalies;
 	CREATE TABLE IF NOT EXISTS anomalies ( 
 		id SERIAL PRIMARY KEY, 
 		user_id INT REFERENCES users(id) ON DELETE CASCADE, 
@@ -43,7 +41,6 @@ async function initDb() {
 		created_at TIMESTAMP DEFAULT NOW() 
 	);
 
-    DROP TABLE feedback;
     CREATE TABLE IF NOT EXISTS feedback (
       id SERIAL PRIMARY KEY,
       user_id INT REFERENCES users(id) ON DELETE CASCADE,
@@ -51,7 +48,6 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     );
 
-    DROP TABLE user_integrations;
     CREATE TABLE IF NOT EXISTS user_integrations (
       id SERIAL PRIMARY KEY,
       user_id INT REFERENCES users(id) ON DELETE CASCADE,
