@@ -215,8 +215,14 @@
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify(data)
       });
-      if (res.ok) { form.reset(); fetchMetrics().then(drawHeartRateChart); }
-      else alert('Failed to submit metric');
+      if (res.ok) { 
+		form.reset(); 
+		await fetchMetrics();
+		await drawHeartRateChart();
+		await fetchAlerts();
+	  } else {
+		alert('Failed to submit metric');
+	  }
     });
 
     // ---- LOGOUT ----
