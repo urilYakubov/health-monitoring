@@ -6,153 +6,52 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <title>Health Dashboard</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-
-    /* Top Navigation */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f9f9f9; }
     header {
       background: #222;
+      color: #fff;
       padding: 1rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    header h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: #fff;
-    }
+    header h1 { margin: 0; font-size: 1.3rem; }
     nav a {
       color: #fff;
       text-decoration: none;
       margin: 0 1rem;
       font-weight: 500;
-      transition: color 0.3s ease;
     }
-    nav a:hover {
-      color: #4CAF50;
-    }
-    .logout-btn {
-      background: #e74c3c;
-      color: #fff;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .logout-btn:hover {
-      background: #c0392b;
-    }
-
-    /* Page Content */
-    main {
-      padding: 2rem;
-      max-width: 1000px;
-      margin: auto;
-    }
-    h2 {
-      margin-top: 2rem;
-      color: #444;
-    }
-
-    /* Buttons */
-    .btn {
-      padding: 0.7rem 1.2rem;
-      margin: 0.5rem 0.5rem 1rem 0;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.1s ease, background 0.3s ease;
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-    }
-    .btn-fitbit { background: #00b0b9; color: white; }
-    .btn-withings { background: #0056b3; color: white; }
-
-    /* Form */
-    form {
-      margin: 2rem 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      align-items: center;
-    }
-    form label {
-      font-weight: bold;
-    }
-    form input, form select {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    form button {
-      background: #4CAF50;
-      color: white;
-    }
-
-    /* Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      background: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #eee;
-      text-align: center;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    .alert-row {
-      background: #ffe5e5;
-    }
-
-    /* Charts */
-    canvas {
-      max-width: 100%;
-      background: #fff;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      header { flex-direction: column; text-align: center; }
-      nav { margin: 0.5rem 0; }
-      form { flex-direction: column; align-items: flex-start; }
-      form input, form select, form button { width: 100%; }
-    }
+    nav a:hover { color: #4CAF50; }
+    main { padding: 2rem; }
+    h1, h2 { color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+    th { background-color: #eee; }
+    form { margin: 2rem 0; }
+    input, select, button { padding: 8px; margin: 5px; }
+    .alert-row { background-color: #ffe5e5; }
+    button { cursor: pointer; }
   </style>
 </head>
 <body>
   <!-- Top Navigation -->
   <header>
-    <h1>📊 Health Monitor</h1>
+    <h1>📊 Health Dashboard</h1>
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="about.html">About</a>
       <a href="feedback.html">Feedback</a>
-      <button class="logout-btn" onclick="logout()">Logout</button>
+      <a href="#" onclick="logout()">Logout</a>
     </nav>
   </header>
 
   <main>
-    <!-- Connect Buttons -->
-    <button id="connectFitbit" class="btn btn-fitbit">Connect Fitbit</button>
-    <button id="connectWithings" class="btn btn-withings">Connect Withings</button>
+    <!-- Connect buttons -->
+    <button id="connectFitbit">Connect Fitbit</button>
+    <button id="connectWithings">Connect Withings</button>
 
-    <!-- Submit Metric -->
+    <!-- Metric input -->
     <form id="metricForm">
       <label>Type:
         <select name="metricType" required>
@@ -166,11 +65,11 @@
       <label>Value:
         <input type="number" step="0.1" name="value" required />
       </label>
-      <button type="submit" class="btn">➕ Submit Metric</button>
+      <button type="submit">➕ Submit Metric</button>
     </form>
 
     <!-- Metrics Table -->
-    <h2>📋 Recent Metrics</h2>
+    <h2>Metrics</h2>
     <table id="metricsTable">
       <thead>
         <tr>
@@ -185,7 +84,7 @@
 
     <!-- Heart Rate Chart -->
     <h2>📈 Heart Rate Trend</h2>
-    <canvas id="heartRateChart" height="200"></canvas>
+    <canvas id="heartRateChart" width="400" height="200"></canvas>
 
     <!-- Alerts -->
     <h2>🚨 Alert History</h2>
@@ -200,15 +99,142 @@
       </thead>
       <tbody></tbody>
     </table>
-    <canvas id="alertsChart" height="200"></canvas>
+    <canvas id="alertsChart" width="400" height="200"></canvas>
   </main>
 
   <script>
     const token = localStorage.getItem('token');
     if (!token) window.location.href = 'login.html';
 
-    // ✅ Keep your old JS logic for metrics, alerts, charts, connect Fitbit/Withings here
-    // (unchanged from your last working version)
+    // ---- FITBIT POPUP AUTH ----
+    document.getElementById('connectFitbit').addEventListener('click', () => {
+      const popup = window.open(`/connect-fitbit?jwt=${token}`, 'fitbitAuth', 'width=600,height=600');
+      window.addEventListener('message', (event) => {
+        if (event.data === 'fitbit-connected') {
+          popup.close();
+          fetchMetrics(); 
+          alert('✅ Fitbit connected!');
+        }
+      });
+    });
+
+    // ---- WITHINGS POPUP AUTH ----
+    document.getElementById('connectWithings').addEventListener('click', () => {
+      const popup = window.open(`/connect-withings?jwt=${token}`, 'withingsAuth', 'width=600,height=600');
+      window.addEventListener('message', (event) => {
+        if (event.data === 'withings-connected') {
+          popup.close();
+          fetchMetrics(); 
+          alert('✅ Withings connected!');
+        }
+      });
+    });
+
+    // ---- METRICS ----
+    async function fetchMetrics() {
+      const res = await fetch('/api/metrics', { headers: { Authorization: 'Bearer ' + token } });
+      const metrics = await res.json();
+      const tbody = document.querySelector('#metricsTable tbody');
+      tbody.innerHTML = '';
+      metrics.forEach(metric => {
+        const row = document.createElement('tr');
+        if (metric.alert) row.classList.add('alert-row');
+        row.innerHTML = `
+          <td>${metric.metric_type}</td>
+          <td>${metric.value}</td>
+          <td>${metric.alert ?? ''}</td>
+          <td>${metric.recorded_at ? new Date(metric.recorded_at.split('.')[0]).toLocaleString() : 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ---- HEART RATE CHART ----
+    let heartRateChart;
+    async function drawHeartRateChart() {
+      const res = await fetch('/api/metrics', { headers: { Authorization: 'Bearer ' + token } });
+      const metrics = await res.json();
+      const heartRates = metrics.filter(m => m.metric_type === 'heart_rate');
+      heartRates.sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+      const labels = heartRates.map(m => new Date(m.recorded_at).toLocaleString());
+      const values = heartRates.map(m => Number(m.value));
+
+      const ctx = document.getElementById('heartRateChart').getContext('2d');
+      if (heartRateChart) heartRateChart.destroy();
+
+      heartRateChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'Heart Rate', data: values, borderColor: 'red', fill: false, tension: 0.1 }] },
+        options: { responsive: true }
+      });
+    }
+
+    // ---- ALERTS ----
+    let alertsChart;
+    async function fetchAlerts() {
+      const res = await fetch('/api/alerts', { headers: { Authorization: 'Bearer ' + token } });
+      const alerts = await res.json();
+      const tbody = document.querySelector('#alertsTable tbody');
+      tbody.innerHTML = '';
+      alerts.forEach(alert => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${alert.metric_type}</td>
+          <td>${alert.value}</td>
+          <td>${alert.reason}</td>
+          <td>${new Date(alert.created_at).toLocaleString()}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      const grouped = {};
+      alerts.forEach(a => {
+        const label = new Date(a.created_at).toLocaleString();
+        if (!grouped[a.metric_type]) grouped[a.metric_type] = { labels: [], values: [] };
+        grouped[a.metric_type].labels.push(label);
+        grouped[a.metric_type].values.push(a.value);
+      });
+
+      const metricColors = { heart_rate: 'red', temperature: 'orange', blood_pressure_systolic: 'blue', blood_pressure_diastolic: 'green', blood_sugar: 'purple' };
+      const datasets = Object.entries(grouped).map(([metric, data]) => ({
+        label: metric, data: data.values, borderColor: metricColors[metric] || 'gray', fill: false, tension: 0.2
+      }));
+
+      const labels = Object.values(grouped)[0]?.labels || [];
+      const ctx = document.getElementById('alertsChart').getContext('2d');
+      if (alertsChart) alertsChart.destroy();
+      alertsChart = new Chart(ctx, { type: 'line', data: { labels, datasets } });
+    }
+
+    // ---- FORM ----
+    document.getElementById('metricForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = { metricType: form.metricType.value, value: parseFloat(form.value.value) };
+      const res = await fetch('/api/metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) { 
+        form.reset(); 
+        await fetchMetrics();
+        await drawHeartRateChart();
+        await fetchAlerts();
+      } else {
+        alert('Failed to submit metric');
+      }
+    });
+
+    // ---- LOGOUT ----
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+
+    // Init
+    fetchMetrics().then(drawHeartRateChart);
+    fetchAlerts();
   </script>
 </body>
 </html>
