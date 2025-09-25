@@ -1,89 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About - Health Monitoring</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About - Health Monitor</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      background-color: #f9f9f9;
-      color: #333;
-      line-height: 1.6;
-    }
-    h1, h2 {
-      color: #2c3e50;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .mission {
-      font-size: 1.2rem;
-      font-style: italic;
-      margin-bottom: 1.5rem;
-      color: #16a085;
-    }
-    a {
-      color: #2980b9;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    footer {
-      margin-top: 2rem;
-      font-size: 0.9rem;
-      color: #777;
-      text-align: center;
-    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f9f9f9; color: #333; }
+    header { background: #222; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 1.5rem; color: #fff; }
+    nav a { color: #fff; text-decoration: none; margin: 0 1rem; font-weight: 500; transition: color 0.3s ease; }
+    nav a:hover { color: #4CAF50; }
+    .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; transition: background 0.3s ease; }
+    .logout-btn:hover { background: #c0392b; }
+    main { padding: 2rem; max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; }
   </style>
 </head>
 <body>
   <header>
-    <h2>Health Monitoring</h2>
+    <h1>📊 Health Monitor</h1>
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="about.html">About</a>
       <a href="feedback.html">Feedback</a>
-      <a href="login.html" onclick="logout()">Logout</a>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </nav>
   </header>
-  <div class="container">
-    <h1>About Health Monitoring</h1>
 
-    <p class="mission">
-      Our mission is simple: <strong>to help people monitor their health in real time and receive alerts when something unusual happens</strong>.
-    </p>
-
-    <h2>How It Works</h2>
-    <ul>
-      <li>Users can connect devices like <strong>Fitbit</strong> or <strong>Withings</strong>, or manually enter their health metrics (heart rate, blood pressure, temperature, etc.).</li>
-      <li>The system stores and analyzes your data securely.</li>
-      <li>If an anomaly is detected (e.g., abnormal heart rate trend), you’ll receive an <strong>alert email</strong>.</li>
-    </ul>
-
-    <h2>Why It Matters</h2>
+  <main>
+    <h2>About Health Monitor</h2>
     <p>
-      Many health issues can be prevented or better managed with early detection.  
-      Our platform provides peace of mind by keeping track of your vital signs and notifying you (and your doctor, if you choose) when something looks off.
+      Health Monitor is a simple, early detection tool that helps track your vital signs in real-time.  
+      You can connect wearables like <strong>Fitbit</strong> and <strong>Withings</strong>, or manually submit your own readings.
     </p>
-
-    <h2>Share Your Feedback</h2>
     <p>
-      We’re just getting started 🚀.  
-      If you have ideas for features or improvements, please share them with us using our 
-      <a href="feedback.html">Feedback Form</a>.
+      If unusual values are detected, you’ll see <strong>alerts instantly</strong> on your dashboard.  
+      Our goal: give you clarity about your health — instead of guessing or ignoring early signs.
     </p>
+    <p>
+      ✅ <strong>Track</strong> — temperature, heart rate, blood pressure, blood sugar  
+      ✅ <strong>Connect</strong> — wearables for automatic sync  
+      ✅ <strong>Get Alerts</strong> — see warnings when something looks unusual  
+    </p>
+    <p>
+      This is our MVP — we’d love your <a href="feedback.html">feedback</a> to help shape the next version.
+    </p>
+  </main>
 
-    <footer>
-      © 2025 Health Monitoring Project · Built with ❤️ to keep people healthy
-    </footer>
-  </div>
+  <script>
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>
