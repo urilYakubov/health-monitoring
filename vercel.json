@@ -4,9 +4,7 @@
     { "src": "src/app.js", "use": "@vercel/node" }
   ],
   "routes": [
+    { "src": "^/$", "status": 302, "headers": { "Location": "/login.html" } },
     { "src": "/(.*)", "dest": "src/app.js" }
-  ],
-  "redirects": [
-    { "source": "/", "destination": "/login.html", "permanent": false }
   ]
 }
