@@ -2,31 +2,32 @@ const express = require('express');
 const path = require('path');
 require('dotenv').config();
 
-const { authenticateToken, authenticatePage } = require('./middleware/authMiddleware'); // ✅ correct import
+const { authenticateToken, authenticatePage } = require('./middleware/authMiddleware');
 
 const app = express();
 app.use(express.json());
 
 // ---- DATABASE ----
-require('./config/db'); // DB connection
+require('./config/db');
 const initDb = require('./config/dbInit');
 initDb()
   .then(() => console.log("✅ Database initialized"))
   .catch(err => console.error("❌ DB init failed:", err));
 
 // ---- STATIC FILES ----
-// Serve public pages except dashboard.html
-app.use(express.static(path.join(__dirname, 'public'), {
-  extensions: ['html']
-}));
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+
+// ✅ Serve environment variable to frontend
+app.get('/env.js', (req, res) => {
+  res.type('application/javascript');
+  res.send(`window.env = { BASE_URL: "${process.env.BASE_URL || ''}" };`);
+});
 
 // ---- PAGE ROUTES ----
-// Login page (public)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Dashboard page (protected)
 app.get("/dashboard.html", authenticatePage, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
@@ -51,7 +52,7 @@ try {
 
 // ---- OTHER ROUTES ----
 const fitbitRoutes = require('./routes/fitbitRoutes');
-app.use('/', fitbitRoutes);   // /connect-fitbit works
+app.use('/', fitbitRoutes);
 
 const withingsRoutes = require("./routes/withingsRoutes");
 app.use("/", withingsRoutes);

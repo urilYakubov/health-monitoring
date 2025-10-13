@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login</title>
+  <script src="/env.js"></script> <!-- injects BASE_URL -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -55,11 +56,10 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
-      try {// Detect if we're running locally or on Vercel
+      try {// Read the BASE_URL from the environment (injected by env.js)
 	  
-		const API_BASE = window.location.hostname === 'localhost'
-			? 'http://localhost:3000'
-			: 'https://health-monitoring-eight.vercel.app';
+		const API_BASE = window.env?.BASE_URL || '';
+		
 		const res = await fetch(`${API_BASE}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
