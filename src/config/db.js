@@ -1,9 +1,6 @@
 const { Pool } = require('pg');
-//const dns = require('dns');
+const dns = require('dns').promises;
 require('dotenv').config();
-
-// Force IPv4 for Supabase connections
-//dns.setDefaultResultOrder('ipv4first');
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -11,13 +8,19 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: { rejectUnauthorized: false },
 });
 
-pool.connect()
-  .then(() => console.log('✅ Connected to PostgreSQL (IPv4 forced)'))
-  .catch((err) => console.error('❌ Connection error', err));
+// Force IPv4 DNS resolution before first connection
+(async () => {
+  try {
+    const ipv4 = (await dns.lookup(process.env.DB_HOST, { family: 4 })).address;
+    pool.options.host = ipv4;
+    await pool.connect();
+    console.log('✅ Connected to PostgreSQL via IPv4');
+  } catch (err) {
+    console.error('❌ Connection error', err);
+  }
+})();
 
 module.exports = pool;
