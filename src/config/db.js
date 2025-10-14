@@ -1,9 +1,9 @@
 const { Pool } = require('pg');
-const dns = require('dns');
+//const dns = require('dns');
 require('dotenv').config();
 
 // Force IPv4 for Supabase connections
-dns.setDefaultResultOrder('ipv4first');
+//dns.setDefaultResultOrder('ipv4first');
 
 const pool = new Pool({
   host: process.env.DB_HOST,
