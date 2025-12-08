@@ -1,0 +1,32 @@
+// src/models/symptomModel.js
+
+const pool = require("../config/db");
+
+exports.saveSymptom = async (data) => {
+  const { user_id, symptom, severity, notes } = data;
+
+  const result = await pool.query(
+    `
+    INSERT INTO user_symptoms (user_id, symptom, severity, notes, recorded_at)
+    VALUES ($1, $2, $3, $4, NOW())
+    RETURNING *;
+    `,
+    [user_id, symptom, severity, notes]
+  );
+
+  return result.rows[0];
+};
+
+exports.getUserSymptoms = async (user_id) => {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM user_symptoms
+    WHERE user_id = $1
+    ORDER BY recorded_at DESC;
+    `,
+    [user_id]
+  );
+
+  return result.rows;
+};

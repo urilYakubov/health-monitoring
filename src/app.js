@@ -60,6 +60,10 @@ app.use("/", withingsRoutes);
 const feedbackRoutes = require("./routes/feedbackRoutes");
 app.use("/api", feedbackRoutes);
 
+const symptomRoutes = require('./routes/symptomRoutes');
+app.use('/api/symptoms', symptomRoutes);
+console.log("symptomRoutes loaded from app.js");
+
 // ---- START SERVER ----
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
