@@ -98,6 +98,7 @@
   <button class="nav-btn" data-page="trends">📈 Trends</button>
   <button class="nav-btn" data-page="alerts">🚨 Alerts</button>
   <button class="nav-btn" data-page="symptoms">🩺 Symptoms</button>
+  <button id="feedbackBtn">💬 Feedback</button>
   <button onclick="logout()">🚪 Logout</button>
 </div>
 
@@ -400,6 +401,11 @@ fetchMetrics();
 drawHeartRateChart();
 fetchAlerts();
 fetchSymptoms();
+
+// FEEDBACK PAGE REDIRECT
+document.getElementById("feedbackBtn").addEventListener("click", () => {
+  window.location.href = "feedback.html";
+});
 
 </script>
 
