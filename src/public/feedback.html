@@ -34,7 +34,23 @@
     <h2>We’d love your feedback 💬</h2>
     <p>Your thoughts will help us improve Health Monitor and add the features that matter most to you.</p>
     <form id="feedbackForm">
-      <input type="text" name="subject" placeholder="Subject" required />
+	
+      <label>
+        Category:
+        <select name="category" required>
+          <option value="General">General</option>
+          <option value="Bug">Bug</option>
+          <option value="Feature Request">Feature Request</option>
+          <option value="UI/UX">UI / Design</option>
+          <option value="Metrics">Metrics Module</option>
+          <option value="Trends">Trends / Charts</option>
+          <option value="Alerts">Alerts</option>
+          <option value="Symptoms">Symptoms Module</option>
+          <option value="Devices">Fitbit / Withings</option>
+        </select>
+      </label>
+	  
+	  
       <textarea name="message" rows="6" placeholder="Write your feedback here..." required></textarea>
       <button type="submit">Submit Feedback</button>
     </form>
@@ -45,13 +61,13 @@
     async function submitFeedback(e) {
       e.preventDefault();
       const token = localStorage.getItem('token');
-      const subject = e.target.subject.value;
+      const category = e.target.category.value;
       const message = e.target.message.value;
 
       const res = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ subject, message })
+        body: JSON.stringify({ category, message })
       });
 
       const msg = document.getElementById('feedbackMsg');
