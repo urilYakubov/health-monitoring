@@ -448,12 +448,13 @@ async function fetchSymptoms() {
 /* SUBMIT METRICS */
 document.getElementById("metricForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const data = {
     metricType: e.target.metricType.value,
     value: Number(e.target.value.value)
   };
 
-  await fetch("/api/metrics", {
+  const res = await fetch("/api/metrics", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -462,9 +463,16 @@ document.getElementById("metricForm").addEventListener("submit", async (e) => {
     body: JSON.stringify(data)
   });
 
-  fetchMetrics();
-  drawHeartRateChart();
+  if (res.ok) {
+    e.target.reset();
+    fetchMetrics();
+    drawHeartRateChart();
+    showToast("✅ Metric saved successfully");
+  } else {
+    showToast("❌ Failed to save metric", "error");
+  }
 });
+
 
 /* SUBMIT SYMPTOMS */
 document.getElementById("symptomForm").addEventListener("submit", async (e) => {
@@ -476,7 +484,7 @@ document.getElementById("symptomForm").addEventListener("submit", async (e) => {
     notes: e.target.notes.value
   };
 
-  await fetch("/api/symptoms", {
+  const res = await fetch("/api/symptoms", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -485,8 +493,15 @@ document.getElementById("symptomForm").addEventListener("submit", async (e) => {
     body: JSON.stringify(data)
   });
 
-  fetchSymptoms();
+  if (res.ok) {
+    e.target.reset();
+    fetchSymptoms();
+    showToast("🩺 Symptom added");
+  } else {
+    showToast("❌ Failed to add symptom", "error");
+  }
 });
+
 
 fetchMetrics();
 drawHeartRateChart();
@@ -498,7 +513,35 @@ document.getElementById("feedbackBtn").addEventListener("click", () => {
   window.location.href = "feedback.html";
 });
 
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+
+  toast.style.background = type === "success" ? "#4CAF50" : "#e74c3c";
+  toast.style.display = "block";
+
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 3000);
+}
+
+
 </script>
+
+<!-- TOAST -->
+<div id="toast" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #333;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 6px;
+  display: none;
+  z-index: 9999;
+  font-size: 14px;
+"></div>
+
 
 </body>
 </html>
