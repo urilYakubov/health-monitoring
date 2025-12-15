@@ -331,6 +331,12 @@ let heartRateChart;
 async function drawHeartRateChart() {
   const canvas = document.getElementById("heartRateChart");
   const ctx = canvas.getContext("2d");
+  
+  // 🔄 Loading message
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = "14px Segoe UI";
+  ctx.fillStyle = "#777";
+  ctx.fillText("Loading heart rate trend...", 20, 40);
 
   try {
     const res = await fetch("/api/metrics", {
@@ -379,23 +385,61 @@ async function drawHeartRateChart() {
 /* ------------------ ALERTS ------------------ */
 
 async function fetchAlerts() {
-  const res = await fetch("/api/alerts", { headers: { Authorization: "Bearer " + token }});
-  const alerts = await res.json();
-
   const tbody = document.querySelector("#alertsTable tbody");
-  tbody.innerHTML = "";
 
-  alerts.forEach(a => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${a.metric_type}</td>
-      <td>${a.value}</td>
-      <td>${a.reason}</td>
-      <td>${new Date(a.created_at).toLocaleString()}</td>
+  // 🔄 Loading state
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="4" class="loading">Loading alerts...</td>
+    </tr>
+  `;
+
+  try {
+    const res = await fetch("/api/alerts", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch alerts");
+
+    const alerts = await res.json();
+    tbody.innerHTML = "";
+
+    // 📭 Empty state
+    if (!alerts.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="empty-state">
+            🎉 No alerts yet. Everything looks good.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    // 📋 Render alerts
+    alerts.forEach(a => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${a.metric_type}</td>
+        <td>${a.value}</td>
+        <td>${a.reason}</td>
+        <td>${new Date(a.created_at).toLocaleString()}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+  } catch (err) {
+    // ❌ Error state
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="empty-state">
+          ❌ Failed to load alerts. Please try again later.
+        </td>
+      </tr>
     `;
-    tbody.appendChild(row);
-  });
+  }
 }
+
 
 /* ------------------ SYMPTOMS ------------------ */
 
