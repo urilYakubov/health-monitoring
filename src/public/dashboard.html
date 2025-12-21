@@ -103,6 +103,41 @@
 	  border: 1px dashed #ccc;
 	  margin-top: 10px;
 	}
+	
+	.insights-grid {
+	  display: grid;
+	  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	  gap: 15px;
+	  margin-top: 15px;
+	}
+
+	.insight-card {
+	  background: white;
+	  border-radius: 8px;
+	  padding: 15px;
+	  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+	}
+
+	.insight-card .icon {
+	  font-size: 1.8rem;
+	}
+
+	.insight-card .metric {
+	  font-weight: bold;
+	  margin-top: 5px;
+	}
+
+	.insight-card .confidence {
+	  margin-top: 8px;
+	  font-size: 0.85rem;
+	  font-weight: bold;
+	}
+
+	.confidence.High { color: #2ecc71; }
+	.confidence.Medium { color: #f39c12; }
+	.confidence.Low { color: #e74c3c; }
+
+
 
   </style>
 </head>
@@ -144,6 +179,9 @@
       </label>
       <button type="submit">➕ Submit Metric</button>
     </form>
+	
+	<h3>🧠 Health Insights</h3>
+    <div id="insightsContainer" class="insights-grid"></div>
 
     <h3>Latest Metrics</h3>
     <table id="metricsTable">
@@ -488,6 +526,53 @@ async function fetchSymptoms() {
   }
 }
 
+/* ------------------ Insights ------------------ */
+async function fetchInsights() {
+  const container = document.getElementById("insightsContainer");
+  container.innerHTML = `<div class="loading">Loading insights...</div>`;
+
+  try {
+    const res = await fetch("/api/insights", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const insights = await res.json();
+    container.innerHTML = "";
+
+    if (!insights.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          No insights yet. Add more data to unlock insights.
+        </div>
+      `;
+      return;
+    }
+
+    insights.forEach(i => {
+      const card = document.createElement("div");
+      card.className = "insight-card";
+
+      card.innerHTML = `
+        <div class="icon">${i.icon}</div>
+        <div class="metric">${i.metric}</div>
+        <p>${i.message}</p>
+        <div class="confidence ${i.confidence}">
+          Confidence: ${i.confidence}
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    container.innerHTML = `
+      <div class="empty-state">Failed to load insights.</div>
+    `;
+  }
+}
+
+
+
 
 /* SUBMIT METRICS */
 document.getElementById("metricForm").addEventListener("submit", async (e) => {
@@ -551,6 +636,7 @@ fetchMetrics();
 drawHeartRateChart();
 fetchAlerts();
 fetchSymptoms();
+fetchInsights();
 
 // FEEDBACK PAGE REDIRECT
 document.getElementById("feedbackBtn").addEventListener("click", () => {
