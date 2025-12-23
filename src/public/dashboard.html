@@ -106,37 +106,52 @@
 	
 	.insights-grid {
 	  display: grid;
-	  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-	  gap: 15px;
-	  margin-top: 15px;
+	  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	  gap: 16px;
+	  margin-top: 12px;
 	}
 
 	.insight-card {
-	  background: white;
-	  border-radius: 8px;
-	  padding: 15px;
-	  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+	  background: #fff;
+	  border-radius: 10px;
+	  padding: 16px;
+	  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+	  border-left: 5px solid #4CAF50;
 	}
 
-	.insight-card .icon {
-	  font-size: 1.8rem;
+	.insight-card.warning {
+	  border-left-color: #e74c3c;
 	}
 
-	.insight-card .metric {
-	  font-weight: bold;
-	  margin-top: 5px;
+	.insight-title {
+	  font-weight: 600;
+	  margin-bottom: 6px;
 	}
 
-	.insight-card .confidence {
-	  margin-top: 8px;
-	  font-size: 0.85rem;
-	  font-weight: bold;
+	.insight-confidence {
+	  font-size: 12px;
+	  margin-bottom: 10px;
+	  color: #555;
 	}
 
-	.confidence.High { color: #2ecc71; }
-	.confidence.Medium { color: #f39c12; }
-	.confidence.Low { color: #e74c3c; }
+	.insight-metric {
+	  font-size: 14px;
+	  margin: 4px 0;
+	}
 
+	.hidden {
+	  display: none;
+	}
+	
+	.clinical-summary {
+	  margin-top: 10px;
+	  padding: 10px;
+	  background: #f6f9fc;
+	  border-left: 4px solid #2b6cb0;
+	  font-size: 14px;
+	  line-height: 1.4;
+	  color: #1a202c;
+	}
 
 
   </style>
@@ -180,8 +195,20 @@
       <button type="submit">➕ Submit Metric</button>
     </form>
 	
-	<h3>🧠 Health Insights</h3>
-    <div id="insightsContainer" class="insights-grid"></div>
+	<section id="insightsSection">
+	  <h2>🧠 Health Insights</h2>
+
+	  <div id="insightsLoading" class="loading">
+		Analyzing your health data…
+	  </div>
+
+	  <div id="insightsEmpty" class="empty-state hidden">
+		No insights yet. Add more data to unlock insights.
+	  </div>
+
+	  <div id="insightsGrid" class="insights-grid"></div>
+	</section>
+
 
     <h3>Latest Metrics</h3>
     <table id="metricsTable">
@@ -528,48 +555,57 @@ async function fetchSymptoms() {
 
 /* ------------------ Insights ------------------ */
 async function fetchInsights() {
-  const container = document.getElementById("insightsContainer");
-  container.innerHTML = `<div class="loading">Loading insights...</div>`;
+  const loading = document.getElementById("insightsLoading");
+  const empty = document.getElementById("insightsEmpty");
+  const grid = document.getElementById("insightsGrid");
+
+  loading.style.display = "block";
+  empty.classList.add("hidden");
+  grid.innerHTML = "";
 
   try {
     const res = await fetch("/api/insights", {
       headers: { Authorization: "Bearer " + token }
     });
-
     const insights = await res.json();
-    container.innerHTML = "";
+
+    loading.style.display = "none";
 
     if (!insights.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          No insights yet. Add more data to unlock insights.
-        </div>
-      `;
+      empty.classList.remove("hidden");
       return;
     }
 
     insights.forEach(i => {
       const card = document.createElement("div");
-      card.className = "insight-card";
+      card.className = "insight-card " + (i.level === "warning" ? "warning" : "");
+	  
+	  const delta = i.symptomAvg - i.baselineAvg;
 
       card.innerHTML = `
-        <div class="icon">${i.icon}</div>
-        <div class="metric">${i.metric}</div>
-        <p>${i.message}</p>
-        <div class="confidence ${i.confidence}">
-          Confidence: ${i.confidence}
+        <div class="insight-title">${i.icon} ${i.metric}</div>
+		<div class="insight-subtitle">Symptom: ${formatSymptom(i.symptom)}</div>
+        <div class="insight-confidence">Confidence: ${i.confidence}</div>
+        <div class="insight-metric">${i.message}</div>
+        <div class="insight-metric">
+          Symptom avg: ${i.symptomAvg} | Baseline: ${i.baselineAvg}
+		  <span class="insight-delta">
+			  Δ ${delta > 0 ? "+" : ""}${delta} bpm
+		  </span>
         </div>
+		<div class="clinical-summary">
+		🩺 ${i.clinicalSummary}
+	  </div>
       `;
 
-      container.appendChild(card);
+      grid.appendChild(card);
     });
 
-  } catch (err) {
-    container.innerHTML = `
-      <div class="empty-state">Failed to load insights.</div>
-    `;
+  } catch (e) {
+    loading.textContent = "Failed to load insights.";
   }
 }
+
 
 
 
@@ -630,6 +666,15 @@ document.getElementById("symptomForm").addEventListener("submit", async (e) => {
     showToast("❌ Failed to add symptom", "error");
   }
 });
+
+function formatSymptom(symptom) {
+  if (!symptom) return "Unknown";
+
+  return symptom
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 
 
 fetchMetrics();

@@ -1,5 +1,8 @@
 const insightsModel = require("../models/insightsModel");
 const interpreters = require("../utils/interpreters");
+const confidence = require("../utils/confidence");
+const { buildClinicalSummary } = require("../utils/clinicalSummary");
+
 
 async function getInsightCards(userId, startDate, endDate) {
   const insights = [];
@@ -10,7 +13,7 @@ async function getInsightCards(userId, startDate, endDate) {
 
   /**
    * Example correlations we support
-   * You can extend this array easily later
+   * We can extend this array easily later
    */
   const correlations = [
     { symptom: "fatigue", metric: "heart_rate", minSeverity: 3 },
@@ -44,12 +47,37 @@ async function getInsightCards(userId, startDate, endDate) {
       );
 
     if (!baselineStats || baselineStats.count < 3) continue;
+	
+	const symptomAvg = Math.round(symptomStats.avg);
+	const baselineAvg = Math.round(baselineStats.avg);
+	const delta = symptomAvg - baselineAvg;
 
     const interpreter = interpreters[c.metric];
     if (!interpreter) continue;
 
     const insight = interpreter(symptomStats, baselineStats);
-    if (insight) insights.push(insight);
+    if (insight) {
+	  insights.push({
+		...insight,
+		symptom: c.symptom,
+		metricType: c.metric,
+		symptomAvg,
+		baselineAvg,
+		delta,
+		confidence: confidence.calculateConfidence(symptomStats.count),
+		sampleSize: symptomStats.count,
+		
+		// 👇 Clinical summary
+		clinicalSummary: buildClinicalSummary({
+		  symptom: c.symptom,
+		  metric: c.metric,
+		  symptomAvg,
+		  baselineAvg,
+		  count: symptomStats.count
+		})
+	  });
+	}
+	
   }
 
   return insights;
