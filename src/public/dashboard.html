@@ -143,7 +143,7 @@
 	  display: none;
 	}
 	
-	.clinical-summary {
+	.clinical-sentence {
 	  margin-top: 10px;
 	  padding: 10px;
 	  background: #f6f9fc;
@@ -152,6 +152,55 @@
 	  line-height: 1.4;
 	  color: #1a202c;
 	}
+	
+	.clinical-card {
+	  background: #ffffff;
+	  border: 1px solid #e0e0e0;
+	  padding: 20px;
+	  margin-bottom: 24px;
+	  border-radius: 8px;
+	  font-family: system-ui, -apple-system, sans-serif;
+	}
+
+	.clinical-card h2 {
+	  margin-top: 0;
+	  font-size: 20px;
+	}
+
+	.clinical-meta {
+	  font-size: 13px;
+	  color: #555;
+	  display: flex;
+	  justify-content: space-between;
+	  margin-bottom: 16px;
+	}
+
+	.clinical-block {
+	  margin-bottom: 16px;
+	}
+
+	.clinical-block h3 {
+	  font-size: 15px;
+	  margin-bottom: 6px;
+	}
+
+	.clinical-block ul {
+	  margin: 0;
+	  padding-left: 18px;
+	}
+
+	.clinical-block li {
+	  margin-bottom: 4px;
+	  font-size: 14px;
+	}
+
+	.clinical-disclaimer {
+	  font-size: 12px;
+	  color: #777;
+	  border-top: 1px solid #eee;
+	  padding-top: 10px;
+	}
+
 
 
   </style>
@@ -195,6 +244,7 @@
       <button type="submit">➕ Submit Metric</button>
     </form>
 	
+	
 	<section id="insightsSection">
 	  <h2>🧠 Health Insights</h2>
 
@@ -208,6 +258,8 @@
 
 	  <div id="insightsGrid" class="insights-grid"></div>
 	</section>
+	
+	<section id="clinicalSummaryContainer"></section>
 
 
     <h3>Latest Metrics</h3>
@@ -568,11 +620,13 @@ async function fetchInsights() {
     const res = await fetch("/api/insights", {
       headers: { Authorization: "Bearer " + token }
     });
-    const insights = await res.json();
+	const data = await res.json();
+    const insights = data.insights;
+	const clinicalSummary = data.clinicalSummary;
 
     loading.style.display = "none";
 
-    if (!insights.length) {
+    if (!insights || !insights.length) {
       empty.classList.remove("hidden");
       return;
     }
@@ -594,19 +648,62 @@ async function fetchInsights() {
 			  Δ ${delta > 0 ? "+" : ""}${delta} bpm
 		  </span>
         </div>
-		<div class="clinical-summary">
-		🩺 ${i.clinicalSummary}
+		<div class="clinical-sentence">
+		🩺 ${i.clinicalSentence}
 	  </div>
       `;
 
       grid.appendChild(card);
     });
+	
+	if (clinicalSummary) {
+      renderClinicalSummaryCard(clinicalSummary);
+    }
 
   } catch (e) {
     loading.textContent = "Failed to load insights.";
   }
 }
 
+
+function renderClinicalSummaryCard(summary) {
+  const container = document.getElementById("clinicalSummaryContainer");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="clinical-summary-card">
+      <h3>🩺 ${summary.title}</h3>
+
+      <p class="period">
+        Period: ${summary.period.from} → ${summary.period.to}
+      </p>
+
+      <h4>Reported Symptoms</h4>
+      <ul>
+        ${summary.symptoms.map(s =>
+          `<li>${s.name} (reported on ${s.daysReported} days, severity ≥3)</li>`
+        ).join("")}
+      </ul>
+
+      <h4>Key Findings</h4>
+      <ul>
+        ${summary.findings.map(f =>
+          `<li>
+            Average ${f.metric}: +${f.delta} ${f.unit} on days with ${f.symptom}
+            (confidence: ${f.confidence})
+          </li>`
+        ).join("")}
+      </ul>
+
+      <h4>Clinical Interpretation</h4>
+      <ul>
+        ${summary.interpretation.map(i => `<li>${i}</li>`).join("")}
+      </ul>
+
+      <p class="disclaimer">${summary.disclaimer}</p>
+    </div>
+  `;
+}
 
 
 
