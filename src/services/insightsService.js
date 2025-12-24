@@ -21,7 +21,9 @@ async function getInsightCards(userId, startDate, endDate) {
     { symptom: "chest_pain", metric: "heart_rate", minSeverity: 3 },
 
     { symptom: "chest_pain", metric: "blood_pressure_systolic", minSeverity: 3 },
-    { symptom: "chest_pain", metric: "blood_pressure_diastolic", minSeverity: 3 }
+    { symptom: "chest_pain", metric: "blood_pressure_diastolic", minSeverity: 3 },
+	{ symptom: "occipital_head_pain", metric: "blood_pressure_systolic", minSeverity: 3 },
+	{ symptom: "occipital_head_pain", metric: "blood_pressure_diastolic", minSeverity: 3 }
   ];
 
   for (const c of correlations) {
