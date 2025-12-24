@@ -1,7 +1,7 @@
 const insightsModel = require("../models/insightsModel");
 const interpreters = require("../utils/interpreters");
 const confidence = require("../utils/confidence");
-const { buildClinicalSummary } = require("../utils/clinicalSummary");
+const { buildClinicalSentence } = require("../utils/clinicalSentence");
 
 
 async function getInsightCards(userId, startDate, endDate) {
@@ -69,8 +69,8 @@ async function getInsightCards(userId, startDate, endDate) {
 		confidence: confidence.calculateConfidence(symptomStats.count),
 		sampleSize: symptomStats.count,
 		
-		// 👇 Clinical summary
-		clinicalSummary: buildClinicalSummary({
+		// 👇 Clinical sentence
+		clinicalSummary: buildClinicalSentence({
 		  symptom: c.symptom,
 		  metric: c.metric,
 		  symptomAvg,

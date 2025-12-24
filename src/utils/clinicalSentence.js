@@ -1,5 +1,5 @@
-// utils/clinicalSummary.js
-exports.buildClinicalSummary = ({
+// utils/clinicalSentence.js
+exports.buildClinicalSentence = ({
   symptom,
   metric,
   symptomAvg,
