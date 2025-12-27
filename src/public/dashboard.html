@@ -200,6 +200,31 @@
 	  border-top: 1px solid #eee;
 	  padding-top: 10px;
 	}
+	
+	@media print {
+	  body * {
+		visibility: hidden;
+	  }
+
+	  #doctorSummary,
+	  #doctorSummary * {
+		visibility: visible;
+	  }
+
+	  #doctorSummary {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		border: none;
+		box-shadow: none;
+	  }
+
+	  button {
+		display: none;
+	  }
+	}
+
 
 
 
@@ -668,42 +693,70 @@ async function fetchInsights() {
 
 function renderClinicalSummaryCard(summary) {
   const container = document.getElementById("clinicalSummaryContainer");
-  if (!container) return;
+  if (!container || !summary) return;
 
   container.innerHTML = `
-    <div class="clinical-summary-card">
-      <h3>🩺 ${summary.title}</h3>
+    <div class="clinical-card" id="doctorSummary">
 
-      <p class="period">
-        Period: ${summary.period.from} → ${summary.period.to}
+      <div class="clinical-meta">
+        <span><strong>🩺 Clinical Summary</strong></span>
+        <span>${summary.period.from} → ${summary.period.to}</span>
+      </div>
+
+      <div class="clinical-block">
+        <h3>Reported Symptoms</h3>
+        <ul>
+          ${summary.symptoms.map(s =>
+            `<li>${s.name} (reported ${s.daysReported} days, severity ≥3)</li>`
+          ).join("")}
+        </ul>
+      </div>
+
+      <div class="clinical-block">
+        <h3>Key Findings</h3>
+        <ul>
+          ${summary.findings.map(f =>
+            `<li>
+              <strong>${f.metric}</strong>:
+              ${f.delta > 0 ? "+" : ""}${f.delta} ${f.unit}
+              on days with ${f.symptom}
+              (confidence: ${f.confidence})
+            </li>`
+          ).join("")}
+        </ul>
+      </div>
+
+      <div class="clinical-block">
+        <h3>Clinical Interpretation</h3>
+        <ul>
+          ${summary.interpretation.map(i => `<li>${i}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="clinical-block">
+        <h3>Discussion Points</h3>
+        <ul>
+          ${summary.discussionPoints.map(p => `<li>${p}</li>`).join("")}
+        </ul>
+      </div>
+
+      <p class="clinical-disclaimer">
+        ${summary.disclaimer}
       </p>
 
-      <h4>Reported Symptoms</h4>
-      <ul>
-        ${summary.symptoms.map(s =>
-          `<li>${s.name} (reported on ${s.daysReported} days, severity ≥3)</li>`
-        ).join("")}
-      </ul>
-
-      <h4>Key Findings</h4>
-      <ul>
-        ${summary.findings.map(f =>
-          `<li>
-            Average ${f.metric}: +${f.delta} ${f.unit} on days with ${f.symptom}
-            (confidence: ${f.confidence})
-          </li>`
-        ).join("")}
-      </ul>
-
-      <h4>Clinical Interpretation</h4>
-      <ul>
-        ${summary.interpretation.map(i => `<li>${i}</li>`).join("")}
-      </ul>
-
-      <p class="disclaimer">${summary.disclaimer}</p>
+      <button onclick="printDoctorSummary()">🖨️ Print for Doctor</button>
     </div>
   `;
 }
+
+
+function printDoctorSummary() {
+  const summary = document.getElementById("doctorSummary");
+  if (!summary) return;
+
+  window.print();
+}
+
 
 
 
