@@ -57,3 +57,26 @@ exports.upsertDailyAggregation = async ({
     [userId, date, avgSystolic, avgDiastolic, count]
   );
 };
+
+exports.getBpByTimeOfDay = async ({ userId, from, to, timeOfDay }) => {
+  const query = `
+    SELECT
+      COUNT(*) AS count,
+      AVG(systolic) AS avg
+    FROM blood_pressure_readings
+    WHERE user_id = $1
+      AND time_of_day = $2
+      AND measured_at BETWEEN $3 AND $4
+  `;
+
+  const { rows } = await pool.query(query, [
+    userId,
+    timeOfDay,
+    from,
+    to
+  ]);
+
+  return rows[0];
+};
+
+

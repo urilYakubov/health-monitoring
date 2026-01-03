@@ -3,6 +3,8 @@ const interpreters = require("../utils/interpreters");
 const confidence = require("../utils/confidence");
 const { buildClinicalSentence } = require("../utils/clinicalSentence");
 const { buildClinicalSummaryCard } = require("../utils/clinicalSummaryCard");
+const bpModel = require("../models/bloodPressureModel");
+const { interpretBpDiurnal } = require("../utils/interpreters/bloodPressureDiurnal");
 
 async function getInsightCards(userId, startDate, endDate) {
   const insights = [];
@@ -113,6 +115,41 @@ async function getInsightCards(userId, startDate, endDate) {
       })
     });
   }
+  
+    /**
+   * 🕘 Diurnal Blood Pressure Insight (Morning vs Evening)
+   */
+  const morning = await bpModel.getBpByTimeOfDay({
+    userId,
+    from,
+    to,
+    timeOfDay: "morning"
+  });
+
+  const evening = await bpModel.getBpByTimeOfDay({
+    userId,
+    from,
+    to,
+    timeOfDay: "evening"
+  });
+
+  const diurnalInsight = interpretBpDiurnal(morning, evening);
+
+  if (diurnalInsight) {
+    insights.push({
+      ...diurnalInsight,
+      metricType: "blood_pressure_systolic",
+      confidence: confidence.calculateConfidence(
+        Math.min(morning.count || 0, evening.count || 0)
+      ),
+      clinicalSentence: `Morning systolic blood pressure averaged ${Math.round(
+        morning.avg
+      )} mmHg compared to ${Math.round(
+        evening.avg
+      )} mmHg in the evening.`
+    });
+  }
+
 
   const clinicalSummary = buildClinicalSummaryCard(insights, from, to);
 
