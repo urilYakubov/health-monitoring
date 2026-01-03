@@ -258,8 +258,6 @@
         <select name="metricType" required>
           <option value="temperature">Temperature</option>
           <option value="heart_rate">Heart Rate</option>
-          <option value="blood_pressure_systolic">Blood Pressure Systolic</option>
-          <option value="blood_pressure_diastolic">Blood Pressure Diastolic</option>
           <option value="blood_sugar">Blood Sugar</option>
         </select>
       </label>
@@ -268,6 +266,34 @@
       </label>
       <button type="submit">➕ Submit Metric</button>
     </form>
+	
+	
+	<form id="bloodPressureForm" style="margin-top:20px">
+	  <h3>🩸 Blood Pressure</h3>
+
+	  <label>Systolic (mmHg):
+		<input type="number" name="systolic" required />
+	  </label>
+
+	  <label>Diastolic (mmHg):
+		<input type="number" name="diastolic" required />
+	  </label>
+	  
+	  <select name="timeOfDay">
+		<option value="morning">Morning</option>
+		<option value="evening">Evening</option>
+	  </select>
+
+	  <select name="posture">
+		<option value="sitting">Sitting</option>
+		<option value="standing">Standing</option>
+	  </select>
+
+	  <input name="device" placeholder="Omron / Withings / Manual" />
+
+	  <button type="submit">➕ Submit Blood Pressure</button>
+	</form>
+
 	
 	
 	<section id="insightsSection">
@@ -817,6 +843,39 @@ document.getElementById("symptomForm").addEventListener("submit", async (e) => {
     showToast("❌ Failed to add symptom", "error");
   }
 });
+
+
+document.getElementById("bloodPressureForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const data = {
+    systolic: Number(e.target.systolic.value),
+    diastolic: Number(e.target.diastolic.value),
+	timeOfDay: e.target.timeOfDay.value,
+	posture: e.target.posture.value,
+	device: e.target.device.value
+  };
+
+  const res = await fetch("/api/blood-pressure", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify(data)
+  });
+
+  if (res.ok) {
+    e.target.reset();
+    fetchMetrics();
+    fetchInsights();
+    showToast("🩸 Blood pressure saved");
+  } else {
+    showToast("❌ Failed to save blood pressure", "error");
+  }
+});
+
+
 
 function formatSymptom(symptom) {
   if (!symptom) return "Unknown";

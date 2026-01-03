@@ -4,97 +4,23 @@ const { findUserById } = require('../models/userModel'); // You'll create this
 const { addAlert } = require('../models/alertModel');
 const { detectHealthTrend } = require('../services/trendDetectionService');
 const { forecastMetric } = require('../services/forecastService');
-
-function generateHealthAlert({ metricType, value }) {
-  if (metricType === 'temperature' && value > 38.5) {
-    return 'Fever risk';
-  }
-  
-  if (metricType === 'heart_rate' && value > 100) {
-    return 'High heart rate';
-  }
-  
-  if (metricType === 'blood_pressure_systolic' && value > 130) {
-    return 'High systolic blood pressure';
-  }
-
-  if (metricType === 'blood_pressure_diastolic' && value > 80) {
-    return 'High diastolic blood pressure';
-  }
-
-  if (metricType === 'blood_sugar' && (value > 140 || value < 70)) {
-    return 'Abnormal blood sugar';
-  }
-
-  return null;
-}
+const { createMetricInternal } = require('../services/metricService');
 
 async function createMetric(req, res) {
-  const { metricType, value, heart_rate, blood_pressure_systolic, blood_pressure_diastolic } = req.body;
+  const { metricType, value } = req.body;
   const userId = req.user.id;
-  
-  console.log('📥 createMetric function req.body:', req.body);
 
   if (!metricType || typeof value !== 'number') {
     return res.status(400).json({ message: 'metricType and numeric value are required' });
   }
-  console.log('📥 Creating metric for user ID:', req.user.id);  // in createMetric
-  
-  const alert = generateHealthAlert({
-    metricType,
-    value
-  });
 
   try {
-    console.log('Decoded JWT user:', req.user);
-	console.log('Calling addMetric with:', {
-	  userId,
-	  metricType,
-	  value,
-	  alert
-	});
-    const result = await addMetric(
+    const result = await createMetricInternal({
       userId,
       metricType,
-      value,
-	  alert
-    );
-	
-	// If alert exists, send email
-    if (alert) {
-	  await addAlert({
-		  userId,
-		  metricType,
-		  value,
-		  reason: alert
-		});
-		
-      const user = await findUserById(userId);
-      const emailList = [user.email];
+      value
+    });
 
-      if (user.doctor_email) {
-        emailList.push(user.doctor_email);
-      }
-
-      const subject = `⚠️ Health Alert for ${user.email}`;
-      const message = `
-        <strong>Health Alert Triggered</strong><br>
-        <ul>
-          <li>Metric Type: ${metricType}</li>
-          <li>Value: ${value}</li>
-          <li>Time: ${new Date().toLocaleString()}</li>
-        </ul>
-        <p><strong>Reason:</strong> ${alert}</p>
-      `;
-
-      for (const to of emailList) {
-        await sendHealthAlertEmail({ to, subject, message });
-      }
-    }
-	
-	// 📈 Trend detection (AI-based placeholder logic)
-	await detectHealthTrend({ userId, metricType, currentValue: value });
-	
     res.status(201).json(result);
   } catch (err) {
     console.error('Error creating metric:', err);

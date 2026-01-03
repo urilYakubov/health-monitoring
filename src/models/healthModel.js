@@ -1,6 +1,11 @@
 const pool = require('../config/db');
 
-async function addMetric(userId, metricType, value, alert) {
+async function addMetric(userId, 
+	metricType, 
+	value, 
+	alert = null,
+	recordedAt = new Date()
+	) {
   const res = await pool.query(
     `INSERT INTO health_data (
       user_id,
@@ -8,9 +13,9 @@ async function addMetric(userId, metricType, value, alert) {
       value,
       alert,
       recorded_at
-    ) VALUES ($1, $2, $3, $4, NOW())
+    ) VALUES ($1, $2, $3, $4, $5)
     RETURNING *`,
-    [userId, metricType, value, alert] // ✅ 4 values
+    [userId, metricType, value, alert, recordedAt] 
   );
   return res.rows[0];
 }
