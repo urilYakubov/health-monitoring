@@ -1,3 +1,16 @@
+/**
+ * IMPORTANT ARCHITECTURE NOTE
+ * ---------------------------
+ * - Raw BP readings represent real physiological events
+ *   → must go through createMetricInternal (alerts + trends)
+ *
+ * - Daily BP aggregates are analytical summaries only
+ *   → must NOT be written to health_data
+ *   → must NOT trigger alerts or notifications
+ *
+ * This separation preserves clinical accuracy and prevents false alerts.
+ */
+
 const bpModel = require("../models/bloodPressureModel");
 const { createMetricInternal } = require("./metricService");
 

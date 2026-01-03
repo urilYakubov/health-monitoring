@@ -47,3 +47,92 @@ exports.getMetricStatsForBaselineDays = async (
 
   return result.rows[0];
 };
+
+/**
+ * BP stats for days WITH symptom
+ */
+exports.getBpAggregateStatsForSymptomDays = async (
+  userId,
+  symptom,
+  metric,
+  minSeverity,
+  from,
+  to
+) => {
+  const columnMap = {
+    blood_pressure_systolic: "avg_systolic",
+    blood_pressure_diastolic: "avg_diastolic"
+  };
+
+  const column = columnMap[metric];
+  if (!column) {
+    throw new Error(`Unsupported BP metric: ${metric}`);
+  }
+
+  const query = `
+    SELECT
+      COUNT(*) AS count, -- number of days
+      AVG(${column}) AS avg
+    FROM daily_blood_pressure bp
+    JOIN user_symptoms s
+      ON s.user_id = bp.user_id
+     AND DATE(s.recorded_at) = bp.date
+    WHERE bp.user_id = $1
+      AND s.symptom = $2
+      AND s.severity >= $3
+      AND bp.date BETWEEN $4 AND $5
+  `;
+
+  const { rows } = await pool.query(query, [
+    userId,
+    symptom,
+    minSeverity,
+    from,
+    to
+  ]);
+
+  return rows[0];
+};
+
+/**
+ * BP stats for BASELINE days (no symptom)
+ */
+exports.getBpAggregateStatsForBaselineDays = async (
+  userId,
+  metric,
+  from,
+  to
+) => {
+  const columnMap = {
+    blood_pressure_systolic: "avg_systolic",
+    blood_pressure_diastolic: "avg_diastolic"
+  };
+
+  const column = columnMap[metric];
+  if (!column) {
+    throw new Error(`Unsupported BP metric: ${metric}`);
+  }
+
+  const query = `
+    SELECT
+      COUNT(*) AS count, -- number of days
+      AVG(${column}) AS avg
+    FROM daily_blood_pressure bp
+    WHERE bp.user_id = $1
+      AND bp.date BETWEEN $2 AND $3
+      AND NOT EXISTS (
+        SELECT 1
+        FROM user_symptoms s
+        WHERE s.user_id = bp.user_id
+          AND DATE(s.recorded_at) = bp.date
+      )
+  `;
+
+  const { rows } = await pool.query(query, [
+    userId,
+    from,
+    to
+  ]);
+
+  return rows[0];
+};

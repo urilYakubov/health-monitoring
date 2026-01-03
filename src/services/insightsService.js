@@ -4,7 +4,6 @@ const confidence = require("../utils/confidence");
 const { buildClinicalSentence } = require("../utils/clinicalSentence");
 const { buildClinicalSummaryCard } = require("../utils/clinicalSummaryCard");
 
-
 async function getInsightCards(userId, startDate, endDate) {
   const insights = [];
 
@@ -13,8 +12,7 @@ async function getInsightCards(userId, startDate, endDate) {
   const to = endDate || new Date();
 
   /**
-   * Example correlations we support
-   * We can extend this array easily later
+   * Supported correlations
    */
   const correlations = [
     { symptom: "fatigue", metric: "heart_rate", minSeverity: 3 },
@@ -23,76 +21,107 @@ async function getInsightCards(userId, startDate, endDate) {
 
     { symptom: "chest_pain", metric: "blood_pressure_systolic", minSeverity: 3 },
     { symptom: "chest_pain", metric: "blood_pressure_diastolic", minSeverity: 3 },
-	{ symptom: "occipital_head_pain", metric: "blood_pressure_systolic", minSeverity: 3 },
-	{ symptom: "occipital_head_pain", metric: "blood_pressure_diastolic", minSeverity: 3 }
+    { symptom: "occipital_head_pain", metric: "blood_pressure_systolic", minSeverity: 3 },
+    { symptom: "occipital_head_pain", metric: "blood_pressure_diastolic", minSeverity: 3 }
   ];
 
   for (const c of correlations) {
-    const symptomStats =
-      await insightsModel.getMetricStatsForSymptomDays(
-        userId,
-        c.symptom,
-        c.metric,
-        c.minSeverity,
-        from,
-        to
-      );
+    let symptomStats;
+    let baselineStats;
 
-    // not enough data → skip
-    if (!symptomStats || symptomStats.count < 3) continue;
+    /**
+     * 👇 Blood pressure → use DAILY AGGREGATES
+     */
+    if (c.metric.startsWith("blood_pressure")) {
+      symptomStats =
+        await insightsModel.getBpAggregateStatsForSymptomDays(
+          userId,
+          c.symptom,
+          c.metric,
+          c.minSeverity,
+          from,
+          to
+        );
 
-    const baselineStats =
-      await insightsModel.getMetricStatsForBaselineDays(
-        userId,
-        c.metric,
-        from,
-        to
-      );
+      baselineStats =
+        await insightsModel.getBpAggregateStatsForBaselineDays(
+          userId,
+          c.metric,
+          from,
+          to
+        );
+    } else {
+      /**
+       * 👇 Other metrics (heart rate etc.)
+       */
+      symptomStats =
+        await insightsModel.getMetricStatsForSymptomDays(
+          userId,
+          c.symptom,
+          c.metric,
+          c.minSeverity,
+          from,
+          to
+        );
 
-    if (!baselineStats || baselineStats.count < 3) continue;
-	
-	const symptomAvg = Math.round(symptomStats.avg);
-	const baselineAvg = Math.round(baselineStats.avg);
-	const delta = symptomAvg - baselineAvg;
+      baselineStats =
+        await insightsModel.getMetricStatsForBaselineDays(
+          userId,
+          c.metric,
+          from,
+          to
+        );
+    }
+
+    // Not enough data → skip
+    if (
+      !symptomStats ||
+      !baselineStats ||
+      symptomStats.count < 3 ||
+      baselineStats.count < 3
+    ) {
+      continue;
+    }
+
+    const symptomAvg = Math.round(symptomStats.avg);
+    const baselineAvg = Math.round(baselineStats.avg);
+    const delta = symptomAvg - baselineAvg;
 
     const interpreter = interpreters[c.metric];
     if (!interpreter) continue;
 
     const insight = interpreter(symptomStats, baselineStats);
-    if (insight) {
-	  insights.push({
-		...insight,
-		symptom: c.symptom,
-		metricType: c.metric,
-		symptomAvg,
-		baselineAvg,
-		delta,
-		confidence: confidence.calculateConfidence(symptomStats.count),
-		sampleSize: symptomStats.count,
-		
-		// 👇 Clinical sentence
-		clinicalSentence: buildClinicalSentence({
-		  symptom: c.symptom,
-		  metric: c.metric,
-		  symptomAvg,
-		  baselineAvg,
-		  count: symptomStats.count
-		})
-	  });
-	}
-	
+    if (!insight) continue;
+
+    insights.push({
+      ...insight,
+      symptom: c.symptom,
+      metricType: c.metric,
+      symptomAvg,
+      baselineAvg,
+      delta,
+      confidence: confidence.calculateConfidence(symptomStats.count),
+      sampleSize: symptomStats.count,
+
+      // Clinical sentence
+      clinicalSentence: buildClinicalSentence({
+        symptom: c.symptom,
+        metric: c.metric,
+        symptomAvg,
+        baselineAvg,
+        count: symptomStats.count
+      })
+    });
   }
-  
+
   const clinicalSummary = buildClinicalSummaryCard(insights, from, to);
 
   return {
-	  clinicalSummary,
-	  insights
+    clinicalSummary,
+    insights
   };
-
 }
 
 module.exports = {
   getInsightCards
 };
-
