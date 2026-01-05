@@ -49,14 +49,17 @@ exports.recordBloodPressure = async ({
   });
   
   // Recalculate daily aggregation
-  const stats = await bpModel.getDailyStats(userId, date);
-
-  await bpModel.upsertDailyAggregation({
-    userId,
-    date,
-    avgSystolic: Math.round(stats.avg_systolic),
-    avgDiastolic: Math.round(stats.avg_diastolic),
-    count: stats.count
-  });
+  const stats = await bpModel.getDailyStatsByTimeOfDay(userId, date, timeOfDay);
+  
+  if (stats.count > 0) {
+    await bpModel.upsertDailyAggregation({
+      userId,
+      date,
+      timeOfDay,
+      avgSystolic: Math.round(stats.avg_systolic),
+      avgDiastolic: Math.round(stats.avg_diastolic),
+      readings_count: stats.count
+    });
+  }
 
 };
