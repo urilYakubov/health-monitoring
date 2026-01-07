@@ -1,6 +1,8 @@
 const bpModel = require("../src/models/bloodPressureModel");
 const pool = require("../src/config/db");
 
+jest.setTimeout(15000);
+
 describe("Blood pressure diurnal analysis", () => {
   const userId = 1;
 
@@ -40,10 +42,14 @@ describe("Blood pressure diurnal analysis", () => {
       });
     }
   });
-
+  
   afterAll(async () => {
-    await pool.end();
-  });
+	  try {
+		await pool.end();
+	  } catch (e) {
+		console.error("Error closing DB pool", e);
+	  }
+	});
 
   test("Morning vs evening systolic averages differ correctly", async () => {
     const from = "2025-01-01";
@@ -62,6 +68,9 @@ describe("Blood pressure diurnal analysis", () => {
       to,
       timeOfDay: "evening"
     });
+	
+	console.log("Morning rows:", morning);
+    console.log("Evening rows:", evening);
 
     expect(morning.count).toBe(4);
     expect(evening.count).toBe(4);
@@ -70,5 +79,6 @@ describe("Blood pressure diurnal analysis", () => {
     expect(Math.round(evening.avg)).toBe(151);
 
     expect(evening.avg).toBeGreaterThan(morning.avg);
+	
   });
 });

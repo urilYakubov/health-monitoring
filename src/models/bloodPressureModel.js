@@ -23,9 +23,9 @@ exports.getDailyStatsByTimeOfDay = async (userId, date, timeOfDay) => {
   const result = await pool.query(
     `
     SELECT
+	  COUNT(*)::int AS count,
       AVG(systolic) AS avg_systolic,
-      AVG(diastolic) AS avg_diastolic,
-      COUNT(*) AS count
+      AVG(diastolic) AS avg_diastolic
     FROM blood_pressure_readings
     WHERE user_id = $1
       AND DATE(measured_at) = $2
@@ -64,12 +64,13 @@ exports.upsertDailyAggregation = async ({
 exports.getBpByTimeOfDay = async ({ userId, from, to, timeOfDay }) => {
   const query = `
     SELECT
-      COUNT(*) AS count,
-      AVG(systolic) AS avg
+      COUNT(*)::int AS count,
+      AVG(systolic)::float AS avg
     FROM blood_pressure_readings
     WHERE user_id = $1
       AND time_of_day = $2
-      AND measured_at BETWEEN $3 AND $4
+	  AND measured_at >= $3
+      AND measured_at < ($4::date + INTERVAL '1 day')
   `;
 
   const { rows } = await pool.query(query, [
