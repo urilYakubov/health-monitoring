@@ -83,5 +83,39 @@ exports.getBpByTimeOfDay = async ({ userId, from, to, timeOfDay }) => {
   return rows[0];
 };
 
+exports.getBpTrendData = async ({
+  userId,
+  metric,
+  timeOfDay,
+  from,
+  to
+}) => {
+  const column =
+    metric === "blood_pressure_systolic"
+      ? "avg_systolic"
+      : "avg_diastolic";
+
+  let timeFilter = "";
+  const params = [userId, from, to];
+
+  if (timeOfDay) {
+    timeFilter = "AND time_of_day = $4";
+    params.push(timeOfDay);
+  }
+
+  const query = `
+    SELECT
+      date,
+      ${column} AS value
+    FROM daily_blood_pressure
+    WHERE user_id = $1
+      AND date BETWEEN $2 AND $3
+      ${timeFilter}
+    ORDER BY date ASC
+  `;
+
+  const { rows } = await pool.query(query, params);
+  return rows;
+};
 
 
