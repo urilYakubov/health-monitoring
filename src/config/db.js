@@ -2,34 +2,25 @@ const { Pool } = require("pg");
 const dns = require("dns");
 require("dotenv").config();
 
-// Force IPv4 (Render doesn’t support IPv6)
+// Force IPv4 (Render / Supabase safe)
 dns.setDefaultResultOrder("ipv4first");
 
-/**
- * IMPORTANT:
- * Do NOT call pool.connect() here.
- * pg will manage connections automatically.
- * This prevents Jest from hanging.
- */
+const isRemoteDb = Boolean(process.env.DATABASE_URL);
 
-const pool = process.env.DATABASE_URL
+const pool = isRemoteDb
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl:
-        process.env.NODE_ENV === "production"
-          ? { rejectUnauthorized: false }
-          : false
+      ssl: {
+        rejectUnauthorized: false
+      }
     })
   : new Pool({
       host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
+      port: Number(process.env.DB_PORT || 5432),
       user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD, // must already be a string
+      password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      ssl:
-        process.env.NODE_ENV === "production"
-          ? { rejectUnauthorized: false }
-          : false
+      ssl: false
     });
 
 module.exports = pool;

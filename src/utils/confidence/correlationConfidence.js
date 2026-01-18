@@ -1,4 +1,4 @@
-// utils/confidence.js
+// src/utils/confidence/correlationConfidence.js
 exports.calculateConfidence = (count) => {
   if (count >= 10) return "High";
   if (count >= 5) return "Medium";

@@ -1,4 +1,3 @@
-const { calculateConfidence } = require("../confidence");
 
 exports.interpretBloodPressure = (symptomStats, baselineStats, type) => {
   if (!symptomStats || symptomStats.count < 3) return null;
@@ -14,8 +13,7 @@ exports.interpretBloodPressure = (symptomStats, baselineStats, type) => {
         ? "Blood Pressure (Systolic)"
         : "Blood Pressure (Diastolic)",
       icon: "🩸",
-      message: `${type} blood pressure was higher on symptom days.`,
-      confidence: calculateConfidence(symptomStats.count)
+      message: `${type} blood pressure was higher on symptom days.`
     };
   }
 

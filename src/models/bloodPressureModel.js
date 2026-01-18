@@ -38,29 +38,6 @@ exports.getDailyStatsByTimeOfDay = async (userId, date, timeOfDay) => {
   return result.rows[0];
 };
 
-exports.upsertDailyAggregation = async ({
-  userId,
-  date,
-  timeOfDay,
-  avgSystolic,
-  avgDiastolic,
-  readings_count
-}) => {
-  await pool.query(
-    `
-    INSERT INTO daily_blood_pressure
-    (user_id, date, time_of_day, avg_systolic, avg_diastolic, readings_count)
-    VALUES ($1,$2,$3,$4,$5,$6)
-    ON CONFLICT (user_id, date, time_of_day)
-    DO UPDATE SET
-      avg_systolic = EXCLUDED.avg_systolic,
-      avg_diastolic = EXCLUDED.avg_diastolic,
-      readings_count = EXCLUDED.readings_count
-    `,
-    [userId, date, timeOfDay, avgSystolic, avgDiastolic, readings_count]
-  );
-};
-
 exports.getBpByTimeOfDay = async ({ userId, from, to, timeOfDay }) => {
   const query = `
     SELECT

@@ -1,17 +1,21 @@
 const bpModel = require("../models/bloodPressureModel");
+const { computeSlope } = require("../utils/trendMath");
+const {
+  computeConfidence
+} = require("../utils/confidence/bpTrendConfidence");
 
-const WINDOW_DAYS = 14;
 
 exports.getBpTrend = async ({
   userId,
   metric,
-  timeOfDay
+  timeOfDay,
+  windowDays = 14
 }) => {
   const to = new Date();
   const from = new Date();
-  from.setDate(to.getDate() - WINDOW_DAYS);
+  from.setDate(to.getDate() - windowDays);
 
-  const rows = await bpModel.getBpTrendData({
+  const series = await bpModel.getBpTrendData({
     userId,
     metric,
     timeOfDay,
@@ -19,32 +23,37 @@ exports.getBpTrend = async ({
     to
   });
 
-  if (!rows || rows.length < 6) return null;
-
-  const half = Math.floor(rows.length / 2);
-  const first = rows.slice(0, half);
-  const second = rows.slice(half);
-
-  const avg = (arr) =>
-    arr.reduce((sum, r) => sum + r.value, 0) / arr.length;
-
-  const fromAvg = avg(first);
-  const toAvg = avg(second);
-
-  const slope = (toAvg - fromAvg) / WINDOW_DAYS;
-
-  let direction = "stable";
-  if (Math.abs(toAvg - fromAvg) >= 2) {
-    direction = toAvg > fromAvg ? "increasing" : "decreasing";
+  if (series.length < 7) {
+    return {
+      metric,
+      confidence: "low",
+      reason: "insufficient_data"
+    };
   }
+
+  const values = series.map(r => Number(r.value));
+  const dates = series.map(r => new Date(r.date));
+
+  const slope = computeSlope(values);
+  const direction =
+    slope > 0.3 ? "increasing" :
+    slope < -0.3 ? "decreasing" :
+    "stable";
+
+  const confidence = computeConfidence({
+    values,
+    dates,
+    slope
+  });
 
   return {
     metric,
     timeOfDay,
-    windowDays: WINDOW_DAYS,
+    windowDays,
     slope,
     direction,
-    fromAvg,
-    toAvg
+    confidence,
+    fromAvg: values[0],
+    toAvg: values[values.length - 1]
   };
 };
