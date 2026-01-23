@@ -1,44 +1,44 @@
-const bpModel = require("../models/bloodPressureModel");
+const dailyMetricModel = require("../models/dailyMetricModel");
 const { computeSlope } = require("../utils/trendMath");
 const {
   computeConfidence
 } = require("../utils/confidence/bpTrendConfidence");
 
-
-exports.getBpTrend = async ({
+exports.computeBpTrend = async ({
   userId,
-  metric,
-  timeOfDay,
+  metric,              // blood_pressure_systolic | diastolic
   windowDays = 14
 }) => {
   const to = new Date();
   const from = new Date();
   from.setDate(to.getDate() - windowDays);
 
-  const series = await bpModel.getBpTrendData({
+  const series = await dailyMetricModel.getDailySeries({
     userId,
     metric,
-    timeOfDay,
     from,
     to
   });
 
-  if (series.length < 7) {
+  // ⛑️ Safety guard
+  if (!series || series.length < 7) {
     return {
       metric,
+      direction: "unknown",
       confidence: "low",
       reason: "insufficient_data"
     };
   }
 
   const values = series.map(r => Number(r.value));
-  const dates = series.map(r => new Date(r.date));
+  const dates = series.map(r => r.date);
 
   const slope = computeSlope(values);
-  const direction =
-    slope > 0.3 ? "increasing" :
-    slope < -0.3 ? "decreasing" :
-    "stable";
+
+  // 👩‍⚕️ Conservative thresholds (cardiologist-safe)
+  let direction = "stable";
+  if (slope >= 0.5) direction = "increasing";
+  if (slope <= -0.5) direction = "decreasing";
 
   const confidence = computeConfidence({
     values,
@@ -47,13 +47,15 @@ exports.getBpTrend = async ({
   });
 
   return {
+    type: "bp_trend",
     metric,
-    timeOfDay,
     windowDays,
-    slope,
+    slope: Number(slope.toFixed(2)),
     direction,
     confidence,
-    fromAvg: values[0],
-    toAvg: values[values.length - 1]
+    details: {
+      fromAvg: values[0],
+      toAvg: values[values.length - 1]
+    }
   };
 };

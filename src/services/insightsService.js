@@ -4,6 +4,10 @@ const correlationConfidence = require("../utils/confidence/correlationConfidence
 const { buildClinicalSentence } = require("../utils/clinicalSentence");
 const { buildClinicalSummaryCard } = require("../utils/clinicalSummaryCard");
 const { interpretBpDiurnal } = require("../utils/interpreters/bloodPressureDiurnal");
+const { computeBpTrend } = require("./bpTrendService");
+const { interpretBpTrend } = require("../utils/interpreters/bloodPressureTrend");
+
+
 
 async function getInsightCards(userId, startDate, endDate) {
   const insights = [];
@@ -21,6 +25,12 @@ async function getInsightCards(userId, startDate, endDate) {
     { symptom: "occipital_head_pain", metric: "blood_pressure_systolic", minSeverity: 3 },
     { symptom: "occipital_head_pain", metric: "blood_pressure_diastolic", minSeverity: 3 }
   ];
+  
+  const symptomRange = await insightsModel.getSymptomDateRange(userId);
+
+  // Fallback if no symptoms exist
+  const corrFrom = symptomRange?.from ?? from;
+  const corrTo   = symptomRange?.to   ?? to;
 
   for (const c of correlations) {
     const symptomStats =
@@ -29,24 +39,28 @@ async function getInsightCards(userId, startDate, endDate) {
         c.symptom,
         c.metric,
         c.minSeverity,
-        from,
-        to
+        corrFrom,
+        corrTo
       );
 
     const baselineStats =
       await insightsModel.getDailyMetricStatsForBaselineDays(
         userId,
         c.metric,
-        from,
-        to
+        corrFrom,
+        corrTo
       );
-
-    if (
-      !symptomStats ||
-      !baselineStats ||
-      symptomStats.count < 3 ||
-      baselineStats.count < 3
-    ) continue;
+	
+	if (
+	  !symptomStats ||
+	  !baselineStats ||
+	  symptomStats.count < 2 ||
+	  baselineStats.count < 4 ||
+	  symptomStats.avg == null ||
+	  baselineStats.avg == null
+	) {
+	  continue;
+	}
 
     const symptomAvg = Math.round(symptomStats.avg);
     const baselineAvg = Math.round(baselineStats.avg);
@@ -56,15 +70,18 @@ async function getInsightCards(userId, startDate, endDate) {
 
     const insight = interpreter(symptomStats, baselineStats);
     if (!insight) continue;
+	
+	const confidence = correlationConfidence.calculateConfidence(symptomStats.count) ?? "low";
 
     insights.push({
+	  type: "correlation",
       ...insight,
       symptom: c.symptom,
       metricType: c.metric,
       symptomAvg,
       baselineAvg,
       delta: symptomAvg - baselineAvg,
-      confidence: correlationConfidence.calculateConfidence(symptomStats.count),
+      confidence,
       sampleSize: symptomStats.count,
       clinicalSentence: buildClinicalSentence({
         symptom: c.symptom,
@@ -75,14 +92,27 @@ async function getInsightCards(userId, startDate, endDate) {
       })
     });
   }
+  
+  // BP Trend Insight (clinically conservative)
+  const systolicTrend = await computeBpTrend({
+	  userId,
+	  metric: "blood_pressure_systolic",
+	  windowDays: 14
+  });
+
+  if (systolicTrend && systolicTrend.confidence !== "low") {
+	  const trendInsight = interpretBpTrend(systolicTrend);
+	  if (trendInsight) insights.push(trendInsight);
+  }
+
 
   // Diurnal BP from daily_metric_series
-  const BP_DURNAL_METRIC = "blood_pressure_systolic";
+  const BP_DIURNAL_METRIC = "blood_pressure_systolic";
 
-  if (BP_DURNAL_METRIC === "blood_pressure_systolic") {
+  if (BP_DIURNAL_METRIC === "blood_pressure_systolic") {
 	  const morningBp = await insightsModel.getBpDiurnalStats({
 		userId,
-		metric: BP_DURNAL_METRIC,
+		metric: BP_DIURNAL_METRIC,
 		timeOfDay: "morning",
 		from,
 		to
@@ -90,7 +120,7 @@ async function getInsightCards(userId, startDate, endDate) {
 
 	  const eveningBp = await insightsModel.getBpDiurnalStats({
 		userId,
-		metric: BP_DURNAL_METRIC,
+		metric: BP_DIURNAL_METRIC,
 		timeOfDay: "evening",
 		from,
 		to
@@ -100,7 +130,14 @@ async function getInsightCards(userId, startDate, endDate) {
 	  if (diurnalInsight) insights.push(diurnalInsight);
   }
 
-  
+  console.log("INSIGHTS PAYLOAD", insights.map(i => ({
+	  type: i.type,
+	  metric: i.metricType,
+	  symptom: i.symptom,
+	  delta: i.delta,
+	  confidence: i.confidence
+	})));
+
 
   return {
     clinicalSummary: buildClinicalSummaryCard(insights, from, to),

@@ -672,7 +672,10 @@ async function fetchInsights() {
       headers: { Authorization: "Bearer " + token }
     });
 	const data = await res.json();
-    const insights = data.insights;
+    const insights = [
+	  ...(data.correlationInsights || []),
+	  ...(data.trendInsights || [])
+	];
 	const clinicalSummary = data.clinicalSummary;
 
     loading.style.display = "none";
@@ -681,31 +684,56 @@ async function fetchInsights() {
       empty.classList.remove("hidden");
       return;
     }
+	
+	if (!Array.isArray(insights)) {
+	  console.error("Invalid insights payload", insights);
+	  empty.classList.remove("hidden");
+	  return;
+    }
 
     insights.forEach(i => {
-      const card = document.createElement("div");
-      card.className = "insight-card " + (i.level === "warning" ? "warning" : "");
-	  
-	  const delta = i.symptomAvg - i.baselineAvg;
+	  const card = document.createElement("div");
+	  card.className = "insight-card";
 
-      card.innerHTML = `
-        <div class="insight-title">${i.icon} ${i.metric}</div>
-		<div class="insight-subtitle">Symptom: ${formatSymptom(i.symptom)}</div>
-        <div class="insight-confidence">Confidence: ${i.confidence}</div>
-        <div class="insight-metric">${i.message}</div>
-        <div class="insight-metric">
-          Symptom avg: ${i.symptomAvg} | Baseline: ${i.baselineAvg}
-		  <span class="insight-delta">
-			  Δ ${delta > 0 ? "+" : ""}${delta} bpm
-		  </span>
-        </div>
-		<div class="clinical-sentence">
-		🩺 ${i.clinicalSentence}
-	  </div>
-      `;
+	  // ---------------- CORRELATION ----------------
+	  if (i.type === "correlation") {
+		const unit = i.metric === "heart_rate" ? "bpm" : "mmHg";
+        const icon = i.metric === "heart_rate" ? "❤️" : "🩸";
 
-      grid.appendChild(card);
-    });
+		card.innerHTML = `
+		  <div class="insight-title">
+			  ${icon} ${formatMetric(i.metric)}
+		  </div>
+
+		  <div class="insight-subtitle">
+			  Symptom: ${formatSymptom(i.symptom)}
+		  </div>
+
+		  <div class="insight-confidence">
+			  Confidence: ${i.confidence ?? "Low"}
+		  </div>
+
+		  <div class="insight-metric">
+			  Δ ${i.delta > 0 ? "+" : ""}${i.delta} ${unit}
+			  on symptom days
+		  </div>
+		`;
+	  }
+
+	  // ---------------- BP TREND ----------------
+	  else if (i.type === "bp_trend") {
+		card.innerHTML = `
+		  <div class="insight-title">📈 Blood Pressure Trend</div>
+		  <div class="insight-confidence">
+			Confidence: ${i.confidence}
+		  </div>
+		`;
+	  }
+
+	  grid.appendChild(card);
+	});
+
+
 	
 	if (clinicalSummary) {
       renderClinicalSummaryCard(clinicalSummary);
@@ -782,9 +810,6 @@ function printDoctorSummary() {
 
   window.print();
 }
-
-
-
 
 
 /* SUBMIT METRICS */
@@ -875,8 +900,6 @@ document.getElementById("bloodPressureForm").addEventListener("submit", async (e
   }
 });
 
-
-
 function formatSymptom(symptom) {
   if (!symptom) return "Unknown";
 
@@ -885,7 +908,11 @@ function formatSymptom(symptom) {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-
+function formatMetric(metric) {
+  return metric
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
 
 fetchMetrics();
 drawHeartRateChart();

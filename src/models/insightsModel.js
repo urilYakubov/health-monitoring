@@ -13,19 +13,19 @@ exports.getDailyMetricStatsForSymptomDays = async (
 ) => {
   const query = `
     SELECT
-      COUNT(*) AS count,
-      AVG(d.avg_value) AS avg,
-      MIN(d.avg_value) AS min,
-      MAX(d.avg_value) AS max
-    FROM daily_metric_series d
-    JOIN user_symptoms s
-      ON s.user_id = d.user_id
-     AND DATE(s.recorded_at) = d.date
-    WHERE d.user_id = $1
-      AND d.metric = $2
-      AND s.symptom = $3
-      AND s.severity >= $4
-      AND d.date BETWEEN $5 AND $6
+	  COUNT(*) AS count,
+	  AVG(d.avg_value) AS avg,
+	  MIN(d.avg_value) AS min,
+	  MAX(d.avg_value) AS max
+	FROM daily_metric_series d
+	JOIN user_symptoms s
+	  ON s.user_id = d.user_id
+	 AND s.recorded_at::date = d.date
+	WHERE d.user_id = $1
+	  AND d.metric = $2
+	  AND s.symptom = $3
+	  AND s.severity >= $4
+	  AND d.date BETWEEN $5::date AND $6::date;
   `;
 
   const { rows } = await pool.query(query, [
@@ -39,8 +39,6 @@ exports.getDailyMetricStatsForSymptomDays = async (
 
   return rows[0];
 };
-
-
 
 /**
  * Daily metric stats for BASELINE days (no symptom)
@@ -60,12 +58,12 @@ exports.getDailyMetricStatsForBaselineDays = async (
     FROM daily_metric_series d
     WHERE d.user_id = $1
       AND d.metric = $2
-      AND d.date BETWEEN $3 AND $4
+      AND d.date BETWEEN $3::date AND $4::date
       AND NOT EXISTS (
         SELECT 1
         FROM user_symptoms s
         WHERE s.user_id = d.user_id
-          AND DATE(s.recorded_at) = d.date
+          AND s.recorded_at::date = d.date
       )
   `;
 
@@ -83,7 +81,7 @@ exports.getDailyMetricStatsForBaselineDays = async (
 exports.getBpDiurnalStats = async ({
   userId,
   metric, // 'blood_pressure_systolic' | 'blood_pressure_diastolic'
-  timeOfDay,
+  timeOfDay, // 'morning' | 'afternoon' | 'evening' | 'night'
   from,
   to
 }) => {
@@ -92,7 +90,7 @@ exports.getBpDiurnalStats = async ({
       ? "systolic"
       : "diastolic";
 
-  const { rows } = await pool.query(`
+  const query = `
     SELECT
       COUNT(*) AS count,
       AVG(${column}) AS avg,
@@ -101,9 +99,37 @@ exports.getBpDiurnalStats = async ({
     FROM blood_pressure_readings
     WHERE user_id = $1
       AND time_of_day = $2
-      AND measured_at BETWEEN $3 AND $4
-  `, [userId, timeOfDay, from, to]);
+      AND measured_at::date BETWEEN $3::date AND $4::date
+  `;
+
+  const { rows } = await pool.query(query, [
+    userId,
+    timeOfDay,
+    from,
+    to
+  ]);
 
   return rows[0];
 };
 
+
+exports.getSymptomDateRange = async (userId) => {
+  const query = `
+    SELECT
+      MIN(recorded_at::date) AS from,
+      MAX(recorded_at::date) AS to
+    FROM user_symptoms
+    WHERE user_id = $1
+  `;
+
+  const { rows } = await pool.query(query, [userId]);
+
+  if (!rows[0]?.from || !rows[0]?.to) {
+    return null;
+  }
+
+  return {
+    from: rows[0].from,
+    to: rows[0].to
+  };
+};

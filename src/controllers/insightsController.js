@@ -10,15 +10,25 @@ exports.getInsights = async (req, res) => {
     startDate,
     endDate
   );
-  
+
+  const correlationInsights = result.insights.filter(
+    i => i.type === "correlation"
+  );
+
+  const trendInsights = result.insights.filter(
+    i => i.type === "bp_trend"
+  );
+
+  // ✅ Clinical summary MUST use correlations only
   const clinicalSummary = clinicalSummaryCard.buildClinicalSummaryCard(
-    result.insights,
+    correlationInsights,
     startDate,
     endDate
   );
-  
+
   res.json({
-    insights: result.insights,
+    correlationInsights,
+    trendInsights,
     clinicalSummary
   });
 };

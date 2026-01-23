@@ -1,19 +1,30 @@
 function formatDate(date) {
   if (!date) return null;
-
   const d = date instanceof Date ? date : new Date(date);
   if (isNaN(d.getTime())) return null;
-
   return d.toISOString().split("T")[0];
 }
 
-
 function capitalize(text) {
-  return text.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  if (!text || typeof text !== "string") return "";
+  return text
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 exports.buildClinicalSummaryCard = (insights, from, to) => {
   if (!Array.isArray(insights) || insights.length === 0) return null;
+
+  // ONLY correlation insights belong here
+  const correlationInsights = insights.filter(
+    i =>
+      i.type === "correlation" &&
+      typeof i.metricType === "string" &&
+      typeof i.symptomAvg === "number" &&
+      typeof i.baselineAvg === "number"
+  );
+
+  if (correlationInsights.length === 0) return null;
 
   const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 86400000);
   const toDate = to ? new Date(to) : new Date();
@@ -21,8 +32,7 @@ exports.buildClinicalSummaryCard = (insights, from, to) => {
   const symptomsMap = {};
   const findings = [];
 
-  insights.forEach(i => {
-    // Aggregate symptoms
+  correlationInsights.forEach(i => {
     if (!symptomsMap[i.symptom]) {
       symptomsMap[i.symptom] = {
         name: capitalize(i.symptom),
@@ -31,9 +41,16 @@ exports.buildClinicalSummaryCard = (insights, from, to) => {
       };
     }
 
+    const unit =
+      i.metricType.includes("heart_rate")
+        ? "bpm"
+        : i.metricType.includes("blood_pressure")
+        ? "mmHg"
+        : "";
+
     findings.push({
       metric: capitalize(i.metricType),
-      unit: i.metricType.includes("heart_rate") ? "bpm" : "mmHg",
+      unit,
       symptom: capitalize(i.symptom),
       baselineAvg: i.baselineAvg,
       symptomAvg: i.symptomAvg,
@@ -44,7 +61,7 @@ exports.buildClinicalSummaryCard = (insights, from, to) => {
   });
 
   const interpretation = findings.map(f =>
-    `${f.metric} showed a consistent elevation on days with ${f.symptom.toLowerCase()} (+${f.delta} ${f.unit} vs baseline).`
+    `${f.metric} showed higher values on days with ${f.symptom.toLowerCase()} (+${f.delta} ${f.unit} vs baseline).`
   );
 
   return {
@@ -62,10 +79,11 @@ exports.buildClinicalSummaryCard = (insights, from, to) => {
     findings,
     interpretation,
     discussionPoints: [
-      "Are symptom-related metric changes clinically significant?",
-      "Is further monitoring or testing recommended?"
+      "Are symptom-associated metric changes clinically meaningful?",
+      "Should additional monitoring or diagnostics be considered?"
     ],
     disclaimer:
       "This summary is informational only and does not constitute a medical diagnosis."
   };
 };
+
