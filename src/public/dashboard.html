@@ -697,7 +697,7 @@ async function fetchInsights() {
 
 	  // ---------------- CORRELATION ----------------
 	  if (i.type === "correlation") {
-		const unit = i.metric === "heart_rate" ? "bpm" : "mmHg";
+		const unit = i.metricType === "heart_rate" ? "bpm" : "mmHg";
         const icon = i.metric === "heart_rate" ? "❤️" : "🩸";
 
 		card.innerHTML = `
@@ -723,10 +723,13 @@ async function fetchInsights() {
 	  // ---------------- BP TREND ----------------
 	  else if (i.type === "bp_trend") {
 		card.innerHTML = `
-		  <div class="insight-title">📈 Blood Pressure Trend</div>
-		  <div class="insight-confidence">
-			Confidence: ${i.confidence}
-		  </div>
+			<div class="insight-title">📈 Blood Pressure Trend</div>
+			<div class="insight-confidence">
+			  Confidence: ${i.confidence}
+			</div>
+			<div class="insight-metric">
+			  ${i.message}
+			</div>
 		`;
 	  }
 

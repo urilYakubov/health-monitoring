@@ -49,7 +49,7 @@ exports.buildClinicalSummaryCard = (insights, from, to) => {
         : "";
 
     findings.push({
-      metric: capitalize(i.metricType),
+      metric: i.metricLabel ?? capitalize(i.metricType),
       unit,
       symptom: capitalize(i.symptom),
       baselineAvg: i.baselineAvg,

@@ -34,11 +34,16 @@ exports.computeBpTrend = async ({
   const dates = series.map(r => r.date);
 
   const slope = computeSlope(values);
-
-  // 👩‍⚕️ Conservative thresholds (cardiologist-safe)
+  
   let direction = "stable";
-  if (slope >= 0.5) direction = "increasing";
-  if (slope <= -0.5) direction = "decreasing";
+  const start = values[0];
+  const end = values[values.length - 1];
+
+  if (slope >= 0.5 && end >= start) {
+	  direction = "increasing";
+  } else if (slope <= -0.5 && end <= start) {
+	  direction = "decreasing";
+  }
 
   const confidence = computeConfidence({
     values,

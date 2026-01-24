@@ -78,6 +78,7 @@ async function getInsightCards(userId, startDate, endDate) {
       ...insight,
       symptom: c.symptom,
       metricType: c.metric,
+	  metricLabel: insight.metric,
       symptomAvg,
       baselineAvg,
       delta: symptomAvg - baselineAvg,
@@ -129,15 +130,6 @@ async function getInsightCards(userId, startDate, endDate) {
 	  const diurnalInsight = interpretBpDiurnal(morningBp, eveningBp);
 	  if (diurnalInsight) insights.push(diurnalInsight);
   }
-
-  console.log("INSIGHTS PAYLOAD", insights.map(i => ({
-	  type: i.type,
-	  metric: i.metricType,
-	  symptom: i.symptom,
-	  delta: i.delta,
-	  confidence: i.confidence
-	})));
-
 
   return {
     clinicalSummary: buildClinicalSummaryCard(insights, from, to),

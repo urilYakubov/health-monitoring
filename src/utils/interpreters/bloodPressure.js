@@ -1,11 +1,11 @@
 
 exports.interpretBloodPressure = (symptomStats, baselineStats, type) => {
   if (!symptomStats || !baselineStats) return null;
-  if (symptomStats.count < 3 || baselineStats.count < 3) return null;
+  if (symptomStats.count < 2 || baselineStats.count < 3) return null;
 
   const delta = Math.round(symptomStats.avg - baselineStats.avg);
 
-  const threshold = type === "systolic" ? 10 : 5;
+  const threshold = type === "systolic" ? 10 : 4;
 
   if (Math.abs(delta) < threshold) return null;
 
