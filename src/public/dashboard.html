@@ -395,6 +395,54 @@
       </thead>
       <tbody></tbody>
     </table>
+	
+	<!-- MEDICATION SECTION -->
+    <hr style="margin:30px 0"/>
+
+    <h2>💊 Medications</h2>
+
+    <form id="medicationForm">
+      <label>Name:
+        <input type="text" name="name" required />
+      </label>
+
+      <label>Dose:
+        <input type="text" name="dose" placeholder="e.g. 5 mg" />
+      </label>
+
+      <label>Frequency:
+        <input type="text" name="frequency" placeholder="e.g. once daily" />
+      </label>
+
+      <label>Started:
+        <input type="date" name="started_at" required />
+      </label>
+
+      <label>Ended:
+        <input type="date" name="ended_at" />
+      </label>
+
+      <label>Notes:
+        <input type="text" name="notes" placeholder="Optional" />
+      </label>
+
+      <button type="submit">➕ Add Medication</button>
+    </form>
+
+    <h3>Medication History</h3>
+    <table id="medicationsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Dose</th>
+          <th>Frequency</th>
+          <th>Started</th>
+          <th>Ended</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
   </div>
 
 </div>
@@ -657,6 +705,55 @@ async function fetchSymptoms() {
   }
 }
 
+/* ------------------ MEDICATIONS ------------------ */
+
+async function fetchMedications() {
+  const tbody = document.querySelector("#medicationsTable tbody");
+  tbody.innerHTML = `<tr><td colspan="5" class="loading">Loading medications...</td></tr>`;
+
+  try {
+    const res = await fetch("/api/medications", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const meds = await res.json();
+    tbody.innerHTML = "";
+
+    if (!meds.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-state">
+            No medications recorded.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    meds.forEach(m => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${m.name}</td>
+        <td>${m.dose ?? ""}</td>
+        <td>${m.frequency ?? ""}</td>
+        <td>${m.started_at}</td>
+        <td>${m.ended_at ?? ""}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+  } catch (err) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-state">
+          Failed to load medications.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+
 /* ------------------ Insights ------------------ */
 async function fetchInsights() {
   const loading = document.getElementById("insightsLoading");
@@ -873,6 +970,39 @@ document.getElementById("symptomForm").addEventListener("submit", async (e) => {
 });
 
 
+/* SUBMIT MEDICATION */
+document.getElementById("medicationForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const data = {
+    name: e.target.name.value,
+    dose: e.target.dose.value,
+    frequency: e.target.frequency.value,
+    started_at: e.target.started_at.value,
+    ended_at: e.target.ended_at.value || null,
+    notes: e.target.notes.value
+  };
+
+  const res = await fetch("/api/medications", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify(data)
+  });
+
+  if (res.ok) {
+    e.target.reset();
+    fetchMedications();
+    fetchInsights(); // ⬅️ medication-aware insights later
+    showToast("💊 Medication added");
+  } else {
+    showToast("❌ Failed to add medication", "error");
+  }
+});
+
+
 document.getElementById("bloodPressureForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -921,6 +1051,7 @@ fetchMetrics();
 drawHeartRateChart();
 fetchAlerts();
 fetchSymptoms();
+fetchMedications();
 fetchInsights();
 
 // FEEDBACK PAGE REDIRECT

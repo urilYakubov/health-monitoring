@@ -59,3 +59,23 @@ exports.getMedicationsInRange = async ({ userId, from, to }) => {
 
   return rows;
 };
+
+exports.getMedicationsByUser = async (userId) => {
+  const { rows } = await pool.query(
+    `
+    SELECT id,
+	name,
+	dose,
+	frequency,
+	started_at::text AS started_at,
+    ended_at::text AS ended_at
+    FROM user_medications
+    WHERE user_id = $1
+    ORDER BY started_at DESC
+    `,
+    [userId]
+  );
+
+  return rows;
+};
+

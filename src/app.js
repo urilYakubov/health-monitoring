@@ -50,6 +50,10 @@ try {
   console.error('❌ Failed to load healthRoutes:', err);
 }
 
+const medicationRoutes = require("./routes/medicationRoutes");
+app.use("/api/medications", authenticateToken, medicationRoutes);
+console.log("💊 medicationRoutes loaded from app.js");
+
 // ---- OTHER ROUTES ----
 const fitbitRoutes = require('./routes/fitbitRoutes');
 app.use('/', fitbitRoutes);

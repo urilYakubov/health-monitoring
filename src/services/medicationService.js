@@ -32,3 +32,9 @@ exports.addMedication = async (data) => {
     notes
   });
 };
+
+exports.getMedications = async (userId) => {
+  return medicationModel.getMedicationsByUser(userId);
+};
+
+

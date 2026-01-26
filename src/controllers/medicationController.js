@@ -41,3 +41,14 @@ exports.addMedication = async (req, res) => {
     res.status(500).json({ error: "Failed to add medication" });
   }
 };
+
+exports.getMedications = async (req, res) => {
+  try {
+    const meds = await medicationService.getMedications(req.user.id);
+    res.json(meds);
+  } catch (err) {
+    console.error("getMedications error:", err);
+    res.status(500).json({ error: "Failed to load medications" });
+  }
+};
+
