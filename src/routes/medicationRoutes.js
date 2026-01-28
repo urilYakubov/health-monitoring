@@ -7,5 +7,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 
 router.post("/", authenticateToken, medicationController.addMedication);
 router.get("/", medicationController.getMedications);
+router.get("/bp-context", authenticateToken, medicationController.getBpMedicationContext);
+
 
 module.exports = router;

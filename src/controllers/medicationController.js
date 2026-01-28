@@ -52,3 +52,13 @@ exports.getMedications = async (req, res) => {
   }
 };
 
+exports.getBpMedicationContext = async (req, res) => {
+  try {
+    const meds = await medicationService.getBpContext(req.user.id);
+    res.json(meds);
+  } catch (err) {
+    console.error("getBpMedicationContext error:", err);
+    res.status(500).json({ error: "Failed to load BP medication context" });
+  }
+};
+

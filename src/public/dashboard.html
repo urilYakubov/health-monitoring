@@ -331,6 +331,11 @@
   <div id="page-trends" class="hidden">
     <h2>📈 Heart Rate Trend</h2>
     <canvas id="heartRateChart" height="150"></canvas>
+	
+	<hr style="margin:30px 0"/>
+
+    <h2>🩸 Blood Pressure Trend</h2>
+    <canvas id="bpChart" height="150"></canvas>
   </div>
 
   <!-- ALERTS PAGE -->
@@ -544,6 +549,36 @@ async function fetchMetrics() {
 }
 
 
+function formatDateShort(dateStr) {
+  return new Date(dateStr).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
+
+async function fetchBpMedicationSubtitle() {
+  try {
+    const res = await fetch("/api/medications/bp-context", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (!res.ok) return null;
+
+    const meds = await res.json();
+    if (!meds.length) return null;
+
+    const first = meds[0];
+
+    return `All blood pressure measurements shown were recorded while taking ${first.name} (started ${formatDateShort(first.started_at)}).`;
+  } catch (e) {
+    console.warn("BP medication subtitle failed", e);
+    return null;
+  }
+}
+
+
+
 let heartRateChart;
 async function drawHeartRateChart() {
   const canvas = document.getElementById("heartRateChart");
@@ -597,6 +632,106 @@ async function drawHeartRateChart() {
     ctx.fillText("Failed to load chart.", 20, 40);
   }
 }
+
+
+let bpChart;
+
+async function drawBloodPressureChart() {
+  const canvas = document.getElementById("bpChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = "14px Segoe UI";
+  ctx.fillStyle = "#777";
+  ctx.fillText("Loading blood pressure trend...", 20, 40);
+
+  try {
+    const [metricsRes, subtitleText] = await Promise.all([
+      fetch("/api/metrics", {
+        headers: { Authorization: "Bearer " + token }
+      }),
+      fetchBpMedicationSubtitle()
+    ]);
+
+    const metrics = await metricsRes.json();
+
+    const systolic = metrics
+      .filter(m => m.metric_type === "blood_pressure_systolic")
+      .sort((a,b)=>new Date(a.recorded_at)-new Date(b.recorded_at));
+
+    const diastolic = metrics
+      .filter(m => m.metric_type === "blood_pressure_diastolic")
+      .sort((a,b)=>new Date(a.recorded_at)-new Date(b.recorded_at));
+
+    if (!systolic.length && !diastolic.length) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillText("No blood pressure data available.", 20, 40);
+      return;
+    }
+
+    const labels = systolic.map(m =>
+      new Date(m.recorded_at).toLocaleDateString()
+    );
+
+    const datasets = [];
+
+    if (systolic.length) {
+      datasets.push({
+        label: "Systolic (mmHg)",
+        data: systolic.map(m => Number(m.value)),
+        borderWidth: 2,
+        fill: false
+      });
+    }
+
+    if (diastolic.length) {
+      datasets.push({
+        label: "Diastolic (mmHg)",
+        data: diastolic.map(m => Number(m.value)),
+        borderDash: [5,5],
+        borderWidth: 2,
+        fill: false
+      });
+    }
+
+    if (bpChart) bpChart.destroy();
+
+    bpChart = new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: "Blood Pressure Trend"
+          },
+          subtitle: {
+            display: !!subtitleText,
+            text: subtitleText,
+            font: {
+              size: 12,
+              style: "italic"
+            },
+            padding: {
+              bottom: 10
+            }
+          },
+          legend: {
+            position: "top"
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillText("Failed to load blood pressure chart.", 20, 40);
+  }
+}
+
 
 
 /* ------------------ ALERTS ------------------ */
@@ -736,8 +871,8 @@ async function fetchMedications() {
         <td>${m.name}</td>
         <td>${m.dose ?? ""}</td>
         <td>${m.frequency ?? ""}</td>
-        <td>${m.started_at}</td>
-        <td>${m.ended_at ?? ""}</td>
+		<td>${m.started_at ? formatDateShort(m.started_at) : "—"}</td>
+		<td>${m.ended_at ? formatDateShort(m.ended_at) : "—"}</td>
       `;
       tbody.appendChild(row);
     });
@@ -1053,6 +1188,7 @@ fetchAlerts();
 fetchSymptoms();
 fetchMedications();
 fetchInsights();
+drawBloodPressureChart();
 
 // FEEDBACK PAGE REDIRECT
 document.getElementById("feedbackBtn").addEventListener("click", () => {

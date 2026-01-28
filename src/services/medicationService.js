@@ -37,4 +37,9 @@ exports.getMedications = async (userId) => {
   return medicationModel.getMedicationsByUser(userId);
 };
 
+exports.getBpContext = async (userId) => {
+  return medicationModel.getBpAffectingMedications({ userId });
+};
+
+
 

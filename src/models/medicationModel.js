@@ -79,3 +79,18 @@ exports.getMedicationsByUser = async (userId) => {
   return rows;
 };
 
+exports.getBpAffectingMedications = async ({ userId }) => {
+  const { rows } = await pool.query(
+    `
+    SELECT name, started_at
+    FROM user_medications
+    WHERE user_id = $1
+      AND affects_metrics @> ARRAY['blood_pressure']
+      AND (ended_at IS NULL)
+    ORDER BY started_at ASC
+    `,
+    [userId]
+  );
+
+  return rows;
+};
