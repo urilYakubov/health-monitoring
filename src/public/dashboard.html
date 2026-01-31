@@ -279,6 +279,7 @@
           <option value="temperature">Temperature</option>
           <option value="heart_rate">Heart Rate</option>
           <option value="blood_sugar">Blood Sugar</option>
+		  <option value="steps">Steps</option>
         </select>
       </label>
       <label>Value:
@@ -1031,7 +1032,7 @@ async function loadVitalsSummary() {
 
   if (data.steps) {
     document.getElementById("stepsValue").innerText =
-      `${data.steps.mean} steps/day`;
+      `${data.steps.mean} steps/day (30-day avg)`;
   }
 }
 
