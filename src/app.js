@@ -71,6 +71,9 @@ console.log("symptomRoutes loaded from app.js");
 const insightsRoutes = require("./routes/insightsRoutes");
 app.use("/api", insightsRoutes);
 
+const summaryRoutes = require("./routes/summaryRoutes");
+app.use("/api/summary", summaryRoutes);
+
 // ---- START SERVER ----
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
