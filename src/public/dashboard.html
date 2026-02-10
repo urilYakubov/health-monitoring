@@ -141,7 +141,67 @@
 
 	.hidden {
 	  display: none;
+	}	
+	
+	.clinical-card {
+	  background: #ffffff;
+	  border: 1px solid #dcdcdc;
+	  padding: 28px;
+	  margin-bottom: 32px;
+	  border-radius: 4px;
+	  font-family: Georgia, "Times New Roman", serif;
+	  font-size: 15px;
+	  color: #111;
+	  line-height: 1.6;
 	}
+
+	.clinical-header {
+	  border-bottom: 2px solid #000;
+	  margin-bottom: 18px;
+	  padding-bottom: 8px;
+	}
+
+	.clinical-title {
+	  font-size: 20px;
+	  font-weight: 600;
+	  margin: 0;
+	}
+
+	.clinical-period {
+	  font-size: 13px;
+	  color: #555;
+	  margin-top: 4px;
+	}
+
+	.clinical-block {
+	  margin-top: 20px;
+	}
+
+	.clinical-block h3 {
+	  font-size: 14px;
+	  text-transform: uppercase;
+	  letter-spacing: 0.5px;
+	  border-bottom: 1px solid #ccc;
+	  padding-bottom: 4px;
+	  margin-bottom: 8px;
+	}
+
+	.clinical-block ul {
+	  padding-left: 18px;
+	  margin: 0;
+	}
+
+	.clinical-block li {
+	  margin-bottom: 6px;
+	}
+
+	.clinical-disclaimer {
+	  margin-top: 20px;
+	  font-size: 12px;
+	  color: #555;
+	  border-top: 1px solid #ccc;
+	  padding-top: 8px;
+	}	
 	
 	.clinical-sentence {
 	  margin-top: 10px;
@@ -151,16 +211,7 @@
 	  font-size: 14px;
 	  line-height: 1.4;
 	  color: #1a202c;
-	}
-	
-	.clinical-card {
-	  background: #ffffff;
-	  border: 1px solid #e0e0e0;
-	  padding: 20px;
-	  margin-bottom: 24px;
-	  border-radius: 8px;
-	  font-family: system-ui, -apple-system, sans-serif;
-	}
+	}	
 
 	.clinical-card h2 {
 	  margin-top: 0;
@@ -175,31 +226,6 @@
 	  margin-bottom: 16px;
 	}
 
-	.clinical-block {
-	  margin-bottom: 16px;
-	}
-
-	.clinical-block h3 {
-	  font-size: 15px;
-	  margin-bottom: 6px;
-	}
-
-	.clinical-block ul {
-	  margin: 0;
-	  padding-left: 18px;
-	}
-
-	.clinical-block li {
-	  margin-bottom: 4px;
-	  font-size: 14px;
-	}
-
-	.clinical-disclaimer {
-	  font-size: 12px;
-	  color: #777;
-	  border-top: 1px solid #eee;
-	  padding-top: 10px;
-	}
 	
 	@media print {
 	  body * {
@@ -1059,7 +1085,6 @@ async function loadVitalsSummary() {
 }
 
 
-
 function renderClinicalSummaryCard(summary) {
   const container = document.getElementById("clinicalSummaryContainer");
   if (!container || !summary) return;
@@ -1067,42 +1092,51 @@ function renderClinicalSummaryCard(summary) {
   container.innerHTML = `
     <div class="clinical-card" id="doctorSummary">
 
-      <div class="clinical-meta">
-        <span><strong>🩺 Clinical Summary</strong></span>
-        <span>${summary.period.from} → ${summary.period.to}</span>
+      <div class="clinical-header">
+        <p class="clinical-title">Clinical Health Summary</p>
+        <p class="clinical-period">
+          Reporting Period: ${summary.period.from} – ${summary.period.to}
+        </p>
       </div>
 
       ${summary.bpStats ? `
       <div class="clinical-block">
         <h3>Blood Pressure Overview</h3>
         <ul>
-          ${summary.bpStats.mean ? `<li>Mean systolic BP: ${summary.bpStats.mean} mmHg</li>` : ""}
-          ${summary.bpStats.stdDev ? `<li>BP variability (SD): ${summary.bpStats.stdDev} mmHg</li>` : ""}
-          ${summary.bpStats.percentUncontrolled !== null
-            ? `<li>Days above 140 mmHg: ${summary.bpStats.percentUncontrolled}%</li>`
+          ${summary.bpStats.mean ? 
+            `<li>Mean systolic blood pressure during the reporting period was ${summary.bpStats.mean} mmHg.</li>` 
+            : ""}
+
+          ${summary.bpStats.stdDev ? 
+            `<li>Observed systolic variability (standard deviation) was ${summary.bpStats.stdDev} mmHg.</li>` 
+            : ""}
+
+          ${summary.bpStats.percentUncontrolled !== null ? 
+            `<li>${summary.bpStats.percentUncontrolled}% of recorded days exceeded 140 mmHg systolic threshold.</li>` 
             : ""}
         </ul>
       </div>
       ` : ""}
 
       <div class="clinical-block">
-        <h3>Reported Symptoms</h3>
+        <h3>Symptom Reporting</h3>
         <ul>
           ${summary.symptoms.map(s =>
-            `<li>${s.name} (reported ${s.daysReported} days, severity ≥3)</li>`
+            `<li>${formatSymptom(s.name)} was reported on ${s.daysReported} days with severity ≥ 3.</li>`
           ).join("")}
         </ul>
       </div>
 
       <div class="clinical-block">
-        <h3>Key Findings</h3>
+        <h3>Key Observations</h3>
         <ul>
           ${summary.findings.map(f =>
             `<li>
-              <strong>${f.metric}</strong>:
-              ${f.delta > 0 ? "+" : ""}${f.delta} ${f.unit}
-              on days with ${f.symptom}
-              (confidence: ${f.confidence})
+              ${formatMetric(f.metric)} demonstrated a 
+              ${f.delta > 0 ? "mean increase" : "mean decrease"} 
+              of ${Math.abs(f.delta)} ${f.unit} 
+              on days when ${formatSymptom(f.symptom)} was reported 
+              (confidence level: ${f.confidence}).
             </li>`
           ).join("")}
         </ul>
@@ -1116,22 +1150,22 @@ function renderClinicalSummaryCard(summary) {
       </div>
 
       <div class="clinical-block">
-        <h3>Discussion Points</h3>
+        <h3>Recommended Discussion Points</h3>
         <ul>
           ${summary.discussionPoints.map(p => `<li>${p}</li>`).join("")}
         </ul>
-      </div>
+        </div>
 
       <p class="clinical-disclaimer">
-        ${summary.disclaimer}
+        This automated report is generated from patient-recorded health data and is intended 
+        to support clinical evaluation. It does not replace medical judgment.
       </p>
 
-      <button onclick="printDoctorSummary()">🖨️ Print for Doctor</button>
+      <button onclick="printDoctorSummary()">Print Summary</button>
+
     </div>
   `;
 }
-
-
 
 
 function printDoctorSummary() {
