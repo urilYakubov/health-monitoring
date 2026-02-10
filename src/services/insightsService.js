@@ -8,6 +8,54 @@ const { computeBpTrend } = require("./bpTrendService");
 const { interpretBpTrend } = require("../utils/interpreters/bloodPressureTrend");
 
 
+async function buildBpVariabilityInsight({ userId, from, to }) {
+  const stats = await insightsModel.getBpVariability({ userId, from, to });
+
+  if (!stats || !stats.std_dev) return null;
+
+  const sd = Number(stats.std_dev);
+
+  let level = "low";
+  if (sd >= 15) level = "high";
+  else if (sd >= 10) level = "moderate";
+
+  return {
+    type: "bp_variability",
+    stdDev: sd,
+    mean: stats.mean_bp,
+    level,
+    message: `BP variability is ${level} (SD ${sd} mmHg).`
+  };
+}
+
+
+async function buildBpControlInsight({ userId, from, to }) {
+  const stats = await insightsModel.getBpControlStats({ userId, from, to });
+
+  if (!stats || !stats.total_days) return null;
+
+  const total = Number(stats.total_days);
+  const uncontrolled = Number(stats.uncontrolled_days);
+
+  if (!total) return null;
+
+  const percent = Math.round((uncontrolled / total) * 100);
+
+  let status = "well controlled";
+  if (percent > 50) status = "uncontrolled";
+  else if (percent > 25) status = "partially controlled";
+
+  return {
+    type: "bp_control",
+    percent,
+    uncontrolledDays: uncontrolled,
+    totalDays: total,
+    message: `${percent}% of days above 140 mmHg — BP ${status}.`
+  };
+}
+
+
+
 
 async function getInsightCards(userId, startDate, endDate) {
   const insights = [];
@@ -130,11 +178,28 @@ async function getInsightCards(userId, startDate, endDate) {
 	  const diurnalInsight = interpretBpDiurnal(morningBp, eveningBp);
 	  if (diurnalInsight) insights.push(diurnalInsight);
   }
+  
+  const variabilityInsight = await buildBpVariabilityInsight({ userId, from, to });
+  if (variabilityInsight) insights.push(variabilityInsight);
+  
+  const controlInsight = await buildBpControlInsight({ userId, from, to });
+  if (controlInsight) insights.push(controlInsight);
+
+
+  // Extract dynamic BP stats from generated insights
+  const bpTrend = insights.find(i => i.type === "bp_trend");
+  const bpVariability = insights.find(i => i.type === "bp_variability");
+  const bpControl = insights.find(i => i.type === "bp_control");
 
   return {
-    clinicalSummary: buildClinicalSummaryCard(insights, from, to),
-    insights
+	  insights,
+	  summaryStats: {
+		mean: bpTrend?.mean ?? bpVariability?.mean ?? null,
+		stdDev: bpVariability?.stdDev ?? null,
+		percentUncontrolled: bpControl?.percent ?? null
+	  }
   };
+
 }
 
 module.exports = { getInsightCards };

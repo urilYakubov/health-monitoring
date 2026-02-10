@@ -133,3 +133,35 @@ exports.getSymptomDateRange = async (userId) => {
     to: rows[0].to
   };
 };
+
+
+exports.getBpVariability = async ({userId, from, to }) => {
+  const result = await pool.query(`
+    SELECT
+      ROUND(STDDEV(avg_value)::numeric, 2) AS std_dev,
+      ROUND(AVG(avg_value)::numeric, 1) AS mean_bp
+    FROM daily_metric_series
+    WHERE user_id = $1
+      AND metric = 'blood_pressure_systolic'
+      AND date BETWEEN $2 AND $3
+  `, [userId, from, to]);
+
+  return result.rows[0];
+};
+
+
+exports.getBpControlStats = async ({ userId, from, to }) => {
+  const result = await pool.query(`
+    SELECT
+      COUNT(*) AS total_days,
+      COUNT(*) FILTER (WHERE avg_value > 140) AS uncontrolled_days
+    FROM daily_metric_series
+    WHERE user_id = $1
+      AND metric = 'blood_pressure_systolic'
+      AND date BETWEEN $2 AND $3
+  `, [userId, from, to]);
+
+  return result.rows[0];
+};
+
+

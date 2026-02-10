@@ -10,7 +10,7 @@ function authenticateToken(req, res, next) {
     if (err) return res.status(403).json({ message: 'Invalid token' });
 
     req.user = { id: decoded.id };  // ✅ correct format
-	console.log('✅ Authenticated user:', req.user); // ⬅️ debug
+	// console.log('✅ Authenticated user:', req.user); // ⬅️ debug
     next();
   });
 }

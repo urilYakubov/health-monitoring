@@ -940,11 +940,8 @@ async function fetchInsights() {
       headers: { Authorization: "Bearer " + token }
     });
 	const data = await res.json();
-    const insights = [
-	  ...(data.correlationInsights || []),
-	  ...(data.trendInsights || [])
-	];
-	const clinicalSummary = data.clinicalSummary;
+	const insights = data.insights || [];
+   	const clinicalSummary = data.clinicalSummary;
 
     loading.style.display = "none";
 
@@ -1000,6 +997,31 @@ async function fetchInsights() {
 			</div>
 		`;
 	  }
+	  
+	  
+	  else if (i.type === "bp_variability") {
+		  card.innerHTML = `
+			<div class="insight-title">📊 BP Variability</div>
+			<div class="insight-metric">
+			  Standard deviation: ${i.stdDev} mmHg
+			</div>
+			<div class="insight-metric">
+			  ${i.message}
+			</div>
+		  `;
+		}
+		
+		
+	  else if (i.type === "bp_control") {
+		  card.innerHTML = `
+			<div class="insight-title">🩸 BP Control</div>
+			<div class="insight-metric">
+			  ${i.message}
+			</div>
+		  `;
+		}
+ 
+
 
 	  grid.appendChild(card);
 	});
@@ -1050,6 +1072,19 @@ function renderClinicalSummaryCard(summary) {
         <span>${summary.period.from} → ${summary.period.to}</span>
       </div>
 
+      ${summary.bpStats ? `
+      <div class="clinical-block">
+        <h3>Blood Pressure Overview</h3>
+        <ul>
+          ${summary.bpStats.mean ? `<li>Mean systolic BP: ${summary.bpStats.mean} mmHg</li>` : ""}
+          ${summary.bpStats.stdDev ? `<li>BP variability (SD): ${summary.bpStats.stdDev} mmHg</li>` : ""}
+          ${summary.bpStats.percentUncontrolled !== null
+            ? `<li>Days above 140 mmHg: ${summary.bpStats.percentUncontrolled}%</li>`
+            : ""}
+        </ul>
+      </div>
+      ` : ""}
+
       <div class="clinical-block">
         <h3>Reported Symptoms</h3>
         <ul>
@@ -1095,6 +1130,8 @@ function renderClinicalSummaryCard(summary) {
     </div>
   `;
 }
+
+
 
 
 function printDoctorSummary() {

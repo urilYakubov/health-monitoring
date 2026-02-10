@@ -12,7 +12,7 @@ function capitalize(text) {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-exports.buildClinicalSummaryCard = (insights, from, to) => {
+exports.buildClinicalSummaryCard = (insights, from, to, summaryStats = {}) => {
   if (!Array.isArray(insights) || insights.length === 0) return null;
 
   // ONLY correlation insights belong here
@@ -78,6 +78,14 @@ exports.buildClinicalSummaryCard = (insights, from, to) => {
     symptoms: Object.values(symptomsMap),
     findings,
     interpretation,
+	
+	bpStats: {
+	  mean: summaryStats.mean ?? null,
+	  stdDev: summaryStats.stdDev ?? null,
+	  percentUncontrolled: summaryStats.percentUncontrolled ?? null
+	},
+
+	
     discussionPoints: [
       "Are symptom-associated metric changes clinically meaningful?",
       "Should additional monitoring or diagnostics be considered?"
