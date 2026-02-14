@@ -1,12 +1,12 @@
 // src/controllers/medicationController.js
 
 const medicationService = require("../services/medicationService");
+const auditLogger = require('../utils/auditLogger');
 
 exports.addMedication = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const {
+  const userId = req.user.id;
+  
+  const {
       name,
       category,
       dose,
@@ -16,7 +16,8 @@ exports.addMedication = async (req, res) => {
       prescribed_by,
       notes
     } = req.body;
-
+  
+  try {
     if (!name || !started_at) {
       return res.status(400).json({
         error: "Medication name and start date are required"
@@ -34,10 +35,38 @@ exports.addMedication = async (req, res) => {
       prescribed_by,
       notes
     });
+	
+	await auditLogger.logAudit({
+      userId,
+      action: 'ADD_MEDICATION',
+      entity: 'user_medications',
+      entityId: medication?.id ?? null,
+      details: {
+        name,
+        category: category ?? null,
+        dose: dose ?? null,
+        frequency: frequency ?? null,
+		started_at: started_at ?? null,
+		ended_at: ended_at ?? null,
+		prescribed_by: prescribed_by ?? null,
+		notes: notes ?? null
+      }
+    });
 
     res.status(201).json(medication);
   } catch (err) {
     console.error("addMedication error:", err);
+		
+	await auditLogger.logAudit({
+      userId,
+      action: 'ADD_MEDICATION_FAILED',
+      entity: 'user_medications',
+      details: {
+        name: name ?? null,
+        error: err.message
+      }
+    });
+	
     res.status(500).json({ error: "Failed to add medication" });
   }
 };

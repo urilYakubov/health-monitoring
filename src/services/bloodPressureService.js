@@ -26,7 +26,7 @@ exports.recordBloodPressure = async ({
   const date = measuredAt.toISOString().split("T")[0];
 
   // Save raw reading with context
-  await bpModel.insertReading({
+  const result = await bpModel.insertReading({
     userId,
     systolic,
     diastolic,
@@ -50,5 +50,7 @@ exports.recordBloodPressure = async ({
   
   // Recalculate daily aggregation
   const stats = await bpModel.getDailyStatsByTimeOfDay(userId, date, timeOfDay);
+  
+  return result;
 
 };

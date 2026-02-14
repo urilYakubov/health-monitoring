@@ -5,6 +5,8 @@ const { addAlert } = require('../models/alertModel');
 const { detectHealthTrend } = require('../services/trendDetectionService');
 const { forecastMetric } = require('../services/forecastService');
 const { createMetricInternal } = require('../services/metricService');
+const { logAudit } = require('../utils/auditLogger');
+
 
 async function createMetric(req, res) {
   const { metricType, value } = req.body;
@@ -20,10 +22,33 @@ async function createMetric(req, res) {
       metricType,
       value
     });
+	
+	await logAudit({
+      userId,
+      action: 'CREATE_METRIC',
+      entity: 'health_data',
+      entityId: result?.id ?? null,
+      details: {
+        metricType,
+        value
+      }
+    });
 
     res.status(201).json(result);
   } catch (err) {
     console.error('Error creating metric:', err);
+	
+	await logAudit({
+      userId,
+      action: 'CREATE_METRIC_FAILED',
+      entity: 'health_data',
+      details: {
+        metricType,
+        value,
+        error: err.message
+      }
+    });
+	
     res.status(500).json({ message: 'Internal server error' });
   }
 }

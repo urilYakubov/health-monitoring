@@ -9,7 +9,7 @@ exports.insertReading = async ({
   posture,
   device
 }) => {
-  await pool.query(
+  const result = await pool.query(
     `
     INSERT INTO blood_pressure_readings
     (user_id, systolic, diastolic, measured_at, time_of_day, posture, device)
@@ -17,6 +17,7 @@ exports.insertReading = async ({
     `,
     [userId, systolic, diastolic, measuredAt, timeOfDay, posture, device]
   );
+  return result.rows[0];
 };
 
 exports.getDailyStatsByTimeOfDay = async (userId, date, timeOfDay) => {
