@@ -25,6 +25,18 @@ exports.recordBloodPressure = async ({
 }) => {
   const date = measuredAt.toISOString().split("T")[0];
 
+  const duplicateCheck = await bpModel.duplicateCheck({
+	  userId,
+	  systolic,
+	  diastolic
+  });
+
+  if (duplicateCheck.length > 0) {
+	  const error = new Error('Duplicate blood pressure reading detected');
+	  error.statusCode = 409;
+	  throw error;
+  }
+
   // Save raw reading with context
   const result = await bpModel.insertReading({
     userId,

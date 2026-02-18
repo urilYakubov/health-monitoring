@@ -15,9 +15,31 @@ exports.addMedication = async (data) => {
     notes
   } = data;
 
-  // 🛡️ Safety rules
+  if (!name || !started_at) {
+    const err = new Error("Medication name and start date are required");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // 🛡️ Date validation
   if (ended_at && new Date(ended_at) < new Date(started_at)) {
-    throw new Error("Medication end date cannot be before start date");
+    const err = new Error("Medication end date cannot be before start date");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // 🔍 Duplicate check
+  const duplicate = await medicationModel.checkDuplicateMedication({
+    userId,
+    name,
+    started_at,
+    ended_at
+  });
+
+  if (duplicate) {
+    const err = new Error("Duplicate active medication detected");
+    err.statusCode = 409;
+    throw err;
   }
 
   return medicationModel.insertMedication({
@@ -40,6 +62,3 @@ exports.getMedications = async (userId) => {
 exports.getBpContext = async (userId) => {
   return medicationModel.getBpAffectingMedications({ userId });
 };
-
-
-

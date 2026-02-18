@@ -94,3 +94,29 @@ exports.getBpAffectingMedications = async ({ userId }) => {
 
   return rows;
 };
+
+exports.checkDuplicateMedication = async ({
+  userId,
+  name,
+  started_at,
+  ended_at
+}) => {
+  const { rows } = await pool.query(
+    `
+    SELECT id
+    FROM user_medications
+    WHERE user_id = $1
+      AND LOWER(name) = LOWER($2)
+      AND (
+            (ended_at IS NULL)
+            OR
+            (ended_at >= $3)
+          )
+    LIMIT 1
+    `,
+    [userId, name, started_at]
+  );
+
+  return rows.length > 0;
+};
+

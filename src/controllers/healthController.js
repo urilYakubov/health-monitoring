@@ -1,10 +1,9 @@
-const { addMetric, getMetricsByUser, getRecentMetricValues } = require('../models/healthModel');
+const { getMetricsByUser } = require('../models/healthModel');
 const { sendHealthAlertEmail } = require('../services/alertService');
-const { findUserById } = require('../models/userModel'); // You'll create this
+const { findUserById } = require('../models/userModel');
 const { addAlert } = require('../models/alertModel');
-const { detectHealthTrend } = require('../services/trendDetectionService');
 const { forecastMetric } = require('../services/forecastService');
-const { createMetricInternal } = require('../services/metricService');
+const { createMetric: createMetricService } = require('../services/metricService');
 const { logAudit } = require('../utils/auditLogger');
 
 
@@ -13,32 +12,32 @@ async function createMetric(req, res) {
   const userId = req.user.id;
 
   if (!metricType || typeof value !== 'number') {
-    return res.status(400).json({ message: 'metricType and numeric value are required' });
+    return res.status(400).json({
+      message: 'metricType and numeric value are required'
+    });
   }
 
   try {
-    const result = await createMetricInternal({
+    const result = await createMetricService({
       userId,
       metricType,
       value
     });
-	
-	await logAudit({
+
+    await logAudit({
       userId,
       action: 'CREATE_METRIC',
       entity: 'health_data',
       entityId: result?.id ?? null,
-      details: {
-        metricType,
-        value
-      }
+      details: { metricType, value }
     });
 
     res.status(201).json(result);
+
   } catch (err) {
     console.error('Error creating metric:', err);
-	
-	await logAudit({
+
+    await logAudit({
       userId,
       action: 'CREATE_METRIC_FAILED',
       entity: 'health_data',
@@ -48,22 +47,26 @@ async function createMetric(req, res) {
         error: err.message
       }
     });
-	
-    res.status(500).json({ message: 'Internal server error' });
+
+    const status = err.statusCode || 500;
+
+    res.status(status).json({
+      message: err.message || 'Internal server error'
+    });
   }
 }
+
 
 async function listMetrics(req, res) {
   try {
     const metrics = await getMetricsByUser(req.user.id);
-	//console.log('📊 Metrics returned from DB:', metrics); // <- add this
-	//console.log('📤 Listing metrics for user ID:', req.user.id);  // in listMetrics
     res.json(metrics);
   } catch (err) {
     console.error('Error fetching metrics:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 }
+
 
 async function forecastMetricRoute(req, res) {
   const userId = req.user.id;
@@ -75,8 +78,7 @@ async function forecastMetricRoute(req, res) {
 
   try {
     const forecast = await forecastMetric({ userId, metricType });
-	
-	// Forecast alert thresholds
+
     let isAbnormal = false;
     let reason = '';
 
@@ -96,15 +98,14 @@ async function forecastMetricRoute(req, res) {
     }
 
     if (isAbnormal) {
-      // Save forecast alert
+
       await addAlert({
         userId,
         metricType,
-        value: result.forecast[0],
+        value: forecast[0],
         alertReason: reason
       });
 
-      // Optional: Fetch user and send email
       const user = await findUserById(userId);
       const emailList = [user.email];
       if (user.doctor_email) emailList.push(user.doctor_email);
@@ -114,7 +115,7 @@ async function forecastMetricRoute(req, res) {
         <strong>Forecast Alert Triggered</strong><br>
         <ul>
           <li>Metric Type: ${metricType}</li>
-          <li>Forecasted Values: ${result.forecast.map(v => v.toFixed(1)).join(', ')}</li>
+          <li>Forecasted Values: ${forecast.map(v => v.toFixed(1)).join(', ')}</li>
           <li>Time: ${new Date().toLocaleString()}</li>
         </ul>
         <p><strong>Reason:</strong> ${reason}</p>
@@ -124,12 +125,17 @@ async function forecastMetricRoute(req, res) {
         await sendHealthAlertEmail({ to, subject, message });
       }
     }
-	
+
     res.json({ forecast });
+
   } catch (err) {
     console.error('Error forecasting metric:', err);
     res.status(500).json({ message: 'Failed to forecast metric' });
   }
 }
 
-module.exports = { createMetric, listMetrics, forecastMetricRoute };
+module.exports = {
+  createMetric,
+  listMetrics,
+  forecastMetricRoute
+};

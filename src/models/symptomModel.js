@@ -30,3 +30,24 @@ exports.getUserSymptoms = async (user_id) => {
 
   return result.rows;
 };
+
+// ✅ Duplicate check
+exports.checkDuplicateSymptom = async ({
+  userId,
+  symptom,
+  windowMinutes = 30
+}) => {
+  const result = await pool.query(
+    `
+    SELECT id
+    FROM user_symptoms
+    WHERE user_id = $1
+      AND LOWER(symptom) = LOWER($2)
+      AND recorded_at > NOW() - ($3 * INTERVAL '1 minute')
+    LIMIT 1;
+    `,
+    [userId, symptom, windowMinutes]
+  );
+
+  return result.rows.length > 0;
+};

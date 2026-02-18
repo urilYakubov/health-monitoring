@@ -96,4 +96,24 @@ exports.getBpTrendData = async ({
   return rows;
 };
 
+exports.duplicateCheck = async ({
+  userId,
+  systolic,
+  diastolic
+}) => {
+  const result = await pool.query(
+    `
+    SELECT id FROM blood_pressure_readings
+    WHERE user_id = $1
+      AND systolic = $2
+      AND diastolic = $3
+      AND measured_at > NOW() - INTERVAL '2 minutes'
+    `,
+    [userId, systolic, diastolic]
+  );
+
+  return result.rows;
+};
+
+
 
