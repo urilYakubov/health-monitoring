@@ -1,5 +1,6 @@
 // controllers/withingsController.js
 const withingsService = require("../services/withingsService");
+const logger = require('../utils/logger');
 
 exports.connectWithings = (req, res) => {
   const token = req.query.jwt;
@@ -30,7 +31,10 @@ exports.handleCallback = async (req, res) => {
     `);
 	
   } catch (err) {
-    console.error("❌ Withings callback error:", err);
+	logger.error('Withings callback error', {
+	  message: err.message,
+	  stack: err.stack
+	});
     res.status(500).json({ message: "Failed to connect Withings" });
   }
 };

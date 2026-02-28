@@ -1,5 +1,6 @@
 const bpService = require("../services/bloodPressureService");
 const { logAudit } = require('../utils/auditLogger');
+const logger = require('../utils/logger');
 
 
 exports.createBloodPressure = async (req, res) => {
@@ -51,7 +52,13 @@ exports.createBloodPressure = async (req, res) => {
       message: "Blood pressure recorded"
     });
   } catch (err) {
-    console.error("BP error:", err);
+    logger.error('BP error', {
+	  message: err.message,
+	  stack: err.stack,
+	  userId,
+	  systolic,
+	  diastolic
+	});
 	
 	await logAudit({
       userId,

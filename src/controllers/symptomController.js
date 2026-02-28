@@ -2,6 +2,7 @@
 
 const symptomService = require('../services/symptomService');
 const { logAudit } = require('../utils/auditLogger');
+const logger = require('../utils/logger');
 
 // CREATE symptom
 exports.createSymptom = async (req, res) => {
@@ -31,7 +32,13 @@ exports.createSymptom = async (req, res) => {
     res.status(201).json(newSymptom);
 
   } catch (err) {
-    console.error('createSymptom error:', err);
+	logger.error('createSymptom error', {
+	  message: err.message,
+	  stack: err.stack,
+	  userId,
+	  symptom,
+	  severity
+	});
 
     await logAudit({
       userId,
@@ -53,12 +60,16 @@ exports.createSymptom = async (req, res) => {
 
 // GET all symptoms
 exports.getSymptoms = async (req, res) => {
+	const userId = req.user.id;
   try {
-    const userId = req.user.id;
     const symptoms = await symptomService.getSymptoms(userId);
     res.json(symptoms);
   } catch (err) {
-    console.error('getSymptoms error:', err);
+	logger.error('getSymptoms error', {
+	  message: err.message,
+	  stack: err.stack,
+	  userId
+	});
     res.status(500).json({ message: 'Server error' });
   }
 };

@@ -1,4 +1,5 @@
 const { getAlertsByUser } = require('../models/alertModel');
+const logger = require('../utils/logger');
 
 async function listAlerts(req, res) {
   try {
@@ -6,6 +7,10 @@ async function listAlerts(req, res) {
     res.json(alerts);
   } catch (err) {
     console.error('Error fetching alerts:', err);
+	logger.error('Error fetching alerts', {
+	  message: err.message,
+	  stack: err.stack
+	});
     res.status(500).json({ message: 'Internal server error' });
   }
 }

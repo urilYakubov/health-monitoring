@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const { findUserByEmail, createUser } = require('../models/userModel');
+const logger = require('../utils/logger');
 
 async function register(req, res) {
   try {
@@ -17,14 +18,18 @@ async function register(req, res) {
     }
 	
 	// Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
     const user = await createUser(email, hashedPassword);
 
     res.status(201).json({ id: user.id, email: user.email });
-  } catch (error) {
-    console.error('Registration error:', error);
+  } catch (err) {
+    logger.error('Registration error', {
+	  message: err.message,
+	  stack: err.stack,
+	  email
+	});
     res.status(500).json({ message: 'Internal server error' });
   }
 }
@@ -47,8 +52,12 @@ async function login(req, res) {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token });
-  } catch (error) {
-    console.error('Login error:', error);
+  } catch (err) {
+    logger.error('Registration error', {
+	  message: err.message,
+	  stack: err.stack,
+	  email
+	});
     res.status(500).json({ message: 'Internal server error' });
   }
 }

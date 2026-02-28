@@ -2,10 +2,43 @@ const express = require('express');
 const path = require('path');
 require('dotenv').config();
 
+const logger = require('./utils/logger');
+
 const { authenticateToken, authenticatePage } = require('./middleware/authMiddleware');
+
 
 const app = express();
 app.use(express.json());
+
+const helmet = require('helmet');
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
+        styleSrc: ["'self'"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"]
+      }
+    }
+  })
+);
+
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught Exception", {
+    message: err.message,
+    stack: err.stack
+  });
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled Rejection", {
+    reason
+  });
+  process.exit(1);
+});
 
 // ---- DATABASE ----
 require('./config/db');
@@ -73,6 +106,21 @@ app.use("/api", insightsRoutes);
 
 const summaryRoutes = require("./routes/summaryRoutes");
 app.use("/api/summary", summaryRoutes);
+
+// ---- GLOBAL ERROR HANDLER ----
+app.use((err, req, res, next) => {
+  logger.error("Unhandled error", {
+    message: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method
+  });
+
+  res.status(500).json({
+    message: "Internal server error"
+  });
+});
+
 
 // ---- START SERVER ----
 const PORT = process.env.PORT || 3000;

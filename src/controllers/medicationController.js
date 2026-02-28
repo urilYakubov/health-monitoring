@@ -2,6 +2,7 @@
 
 const medicationService = require("../services/medicationService");
 const auditLogger = require('../utils/auditLogger');
+const logger = require('../utils/logger');
 
 exports.addMedication = async (req, res) => {
   const userId = req.user.id;
@@ -55,7 +56,13 @@ exports.addMedication = async (req, res) => {
 
     res.status(201).json(medication);
   } catch (err) {
-    console.error("addMedication error:", err);
+	logger.error('addMedication error', {
+	  message: err.message,
+	  stack: err.stack,
+	  userId,
+	  name,
+	  started_at
+	});
 		
 	await auditLogger.logAudit({
       userId,
@@ -76,7 +83,10 @@ exports.getMedications = async (req, res) => {
     const meds = await medicationService.getMedications(req.user.id);
     res.json(meds);
   } catch (err) {
-    console.error("getMedications error:", err);
+	logger.error('getMedications error', {
+	  message: err.message,
+	  stack: err.stack
+	});
     res.status(500).json({ error: "Failed to load medications" });
   }
 };
@@ -86,7 +96,10 @@ exports.getBpMedicationContext = async (req, res) => {
     const meds = await medicationService.getBpContext(req.user.id);
     res.json(meds);
   } catch (err) {
-    console.error("getBpMedicationContext error:", err);
+	logger.error('getBpMedicationContext error', {
+	  message: err.message,
+	  stack: err.stack
+	});
     res.status(500).json({ error: "Failed to load BP medication context" });
   }
 };

@@ -5,6 +5,7 @@ const { addAlert } = require('../models/alertModel');
 const { forecastMetric } = require('../services/forecastService');
 const { createMetric: createMetricService } = require('../services/metricService');
 const { logAudit } = require('../utils/auditLogger');
+const logger = require('../utils/logger');
 
 
 async function createMetric(req, res) {
@@ -35,7 +36,13 @@ async function createMetric(req, res) {
     res.status(201).json(result);
 
   } catch (err) {
-    console.error('Error creating metric:', err);
+    logger.error('Error creating metric', {
+	  message: err.message,
+	  stack: err.stack,
+	  userId,
+	  metricType,
+	  value
+	});
 
     await logAudit({
       userId,
@@ -62,11 +69,14 @@ async function listMetrics(req, res) {
     const metrics = await getMetricsByUser(req.user.id);
     res.json(metrics);
   } catch (err) {
-    console.error('Error fetching metrics:', err);
+      logger.error('Error fetching metrics', {
+	  message: err.message,
+	  stack: err.stack
+	});
     res.status(500).json({ message: 'Internal server error' });
   }
 }
-
+ 
 
 async function forecastMetricRoute(req, res) {
   const userId = req.user.id;
@@ -129,7 +139,12 @@ async function forecastMetricRoute(req, res) {
     res.json({ forecast });
 
   } catch (err) {
-    console.error('Error forecasting metric:', err);
+	logger.error('Error forecasting metric', {
+	  message: err.message,
+	  stack: err.stack,
+	  userId,
+	  metricType
+	});
     res.status(500).json({ message: 'Failed to forecast metric' });
   }
 }

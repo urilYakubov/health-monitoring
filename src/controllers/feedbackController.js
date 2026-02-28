@@ -1,4 +1,5 @@
 const { saveFeedback } = require("../models/feedbackModel");
+const logger = require('../utils/logger');
 
 async function addFeedback(req, res) {
   try {
@@ -16,7 +17,13 @@ async function addFeedback(req, res) {
     await saveFeedback(userId, category, message);
     res.status(201).json({ message: "✅ Feedback received. Thank you!" });
   } catch (err) {
-    console.error("Feedback error:", err);
+    logger.error('Feedback error', {
+	  message: err.message,
+	  stack: err.stack,
+	  userId,
+	  category,
+	  message
+	});
     res.status(500).json({ message: "Internal server error" });
   }
 }

@@ -1,3 +1,5 @@
+const logger = require('../utils/logger');
+
 // controllers/fitbitController.js
 const fitbitService = require("../services/fitbitService");
 
@@ -33,7 +35,10 @@ exports.handleCallback = async (req, res) => {
 `);
 	
   } catch (err) {
-    console.error("❌ Error in Fitbit callback:", err);
+    logger.error('Error in Fitbit callback', {
+	  message: err.message,
+	  stack: err.stack
+	});
     res.status(500).json({ message: "Something went wrong with Fitbit connection." });
   }
 };
