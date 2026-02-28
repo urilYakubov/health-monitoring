@@ -1,5 +1,7 @@
 const { createLogger, format, transports } = require("winston");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const logger = createLogger({
   level: "info",
   format: format.combine(
@@ -7,18 +9,21 @@ const logger = createLogger({
     format.errors({ stack: true }),
     format.json()
   ),
-  defaultMeta: { service: "health-dashboard-api" },
   transports: [
     new transports.Console(),
 
-    new transports.File({
-      filename: "logs/error.log",
-      level: "error"
-    }),
-
-    new transports.File({
-      filename: "logs/combined.log"
-    })
+    // Only use file logging locally
+    ...(!isProduction
+      ? [
+          new transports.File({
+            filename: "logs/error.log",
+            level: "error"
+          }),
+          new transports.File({
+            filename: "logs/app.log"
+          })
+        ]
+      : [])
   ]
 });
 
