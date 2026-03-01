@@ -62,3 +62,23 @@ exports.getMedications = async (userId) => {
 exports.getBpContext = async (userId) => {
   return medicationModel.getBpAffectingMedications({ userId });
 };
+
+exports.getBpEffectiveness = async (userId) => {
+  const results = await medicationModel.getBpEffectivenessStats(userId);
+
+  if (!results || results.length === 0) {
+    return [];
+  }
+
+  return results.map((med, index, arr) => {
+    const previous = index > 0 ? arr[index - 1] : null;
+
+    return {
+      ...med,
+      systolic_change_from_previous:
+        previous
+          ? Number((med.avg_systolic - previous.avg_systolic).toFixed(1))
+          : null
+    };
+  });
+};

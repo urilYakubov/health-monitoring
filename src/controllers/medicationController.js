@@ -104,3 +104,19 @@ exports.getBpMedicationContext = async (req, res) => {
   }
 };
 
+
+exports.getBpEffectiveness = async (req, res) => {
+  try {
+    const data =
+      await medicationService.getBpEffectiveness(
+        req.user.id
+      );
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({
+      error: "Failed to calculate medication effectiveness"
+    });
+  }
+};
+

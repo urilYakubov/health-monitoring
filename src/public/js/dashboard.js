@@ -789,6 +789,57 @@ function formatMetric(metric) {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
+async function loadBpMedicationEffectiveness() {
+  const container =
+    document.getElementById("bpMedicationEffectiveness");
+
+  container.innerHTML = "Loading medication analysis...";
+
+  try {
+    const res = await fetch(
+      "/api/medications/bp-effectiveness",
+      {
+        headers: { Authorization: "Bearer " + token }
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.length) {
+      container.innerHTML =
+        "Not enough data to evaluate medication effectiveness.";
+      return;
+    }
+
+    container.innerHTML = "";
+
+    data.forEach(med => {
+      const changeText =
+        med.systolic_change_from_previous !== null
+          ? `<div class="delta">
+               Δ ${med.systolic_change_from_previous} mmHg
+             </div>`
+          : "";
+
+      container.innerHTML += `
+        <div class="med-card">
+          <h4>${med.name}</h4>
+          <p>Avg systolic: <strong>${med.avg_systolic}</strong> mmHg</p>
+          <p>Avg diastolic: <strong>${med.avg_diastolic}</strong> mmHg</p>
+          <p>Variability (SD): ${med.systolic_sd} mmHg</p>
+          <p>Control rate: ${med.control_rate}%</p>
+          <p>Readings: ${med.readings_count}</p>
+          ${changeText}
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    container.innerHTML =
+      "Failed to load medication effectiveness.";
+  }
+}
+
 fetchMetrics();
 drawHeartRateChart();
 fetchAlerts();
@@ -797,6 +848,7 @@ fetchMedications();
 fetchInsights();
 drawBloodPressureChart();
 loadVitalsSummary();
+loadBpMedicationEffectiveness();
 
 // FEEDBACK PAGE REDIRECT
 document.getElementById("feedbackBtn").addEventListener("click", () => {
