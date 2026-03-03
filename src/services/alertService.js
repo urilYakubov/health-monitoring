@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const logger = require('../utils/logger');
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -23,7 +24,13 @@ async function sendHealthAlertEmail({ to, subject, message }) {
     await transporter.sendMail(mailOptions);
     console.log(`✅ Email sent to ${to}`);
   } catch (err) {
-    console.error('❌ Failed to send alert email:', err);
+    logger.error('Failed to send alert email', {
+	  message: err.message,
+	  stack: err.stack,
+	  to,
+	  subject,
+	  message
+	});
   }
 }
 
