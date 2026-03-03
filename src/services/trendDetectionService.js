@@ -64,7 +64,7 @@ async function detectHealthTrend({ userId, metricType, currentValue }) {
 	  threshold: anomaly.threshold
 	});
 
-  const alertReason = `🚨 Abnormal ${metricType} trend (Z-score: ${anomaly.zScore.toFixed(2)})`;
+  const alertReason = `Abnormal ${metricType} trend (Z-score: ${anomaly.zScore.toFixed(2)})`;
   console.error('alert for detectHealthTrend:', alertReason);
 
   await addAlert({
@@ -76,7 +76,6 @@ async function detectHealthTrend({ userId, metricType, currentValue }) {
 
   const user = await findUserById(userId);
   const emailList = [user.email];
-  if (user.doctor_email) emailList.push(user.doctor_email);
 
   const subject = `🧠 Health Alert for ${metricType}`;
   const message = `

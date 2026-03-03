@@ -66,7 +66,6 @@ async function createMetricInternal({ userId, metricType, value }) {
     const user = await findUserById(userId);
     if (user) {
       const recipients = [user.email];
-      if (user.doctor_email) recipients.push(user.doctor_email);
 
       for (const to of recipients) {
         await sendHealthAlertEmail({

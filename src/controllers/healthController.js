@@ -118,7 +118,6 @@ async function forecastMetricRoute(req, res) {
 
       const user = await findUserById(userId);
       const emailList = [user.email];
-      if (user.doctor_email) emailList.push(user.doctor_email);
 
       const subject = `⚠️ Forecast Health Alert for ${metricType}`;
       const message = `
