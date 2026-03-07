@@ -1,15 +1,64 @@
 const token = localStorage.getItem("token");
+if (!token) window.location.replace("login.html");
+
+/* ------------------ Navigation ------------------ */
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+
+  btn.addEventListener("click", () => {
+
+    const page = btn.dataset.page;
+
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+
+    const target = document.getElementById(page + "Page");
+    if (target) target.classList.add("active");
+
+  });
+
+});
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Doctor dashboard loaded");
+
+  if (!token) {
+    window.location.href = "login.html";
+    return;
+  }
+
   loadPatientList();
+  setupLogout();
+
 });
+
+
+/* ------------------ Logout ------------------ */
+
+function setupLogout() {
+  const btn = document.getElementById("logoutBtn");
+
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("email");
+
+    window.location.href = "login.html";
+  });
+}
+
+
+/* ------------------ Patient List ------------------ */
 
 async function loadPatientList() {
 
-  console.log("loadPatientList");
-
   const list = document.getElementById("patientList");
+
+  if (!list) return;
+
   list.innerHTML = "<li>Loading...</li>";
 
   try {
@@ -20,7 +69,10 @@ async function loadPatientList() {
       }
     });
 
-    console.log("Response:", res.status);
+    if (!res.ok) {
+      list.innerHTML = "<li>Failed to load patients</li>";
+      return;
+    }
 
     const patients = await res.json();
 
@@ -40,8 +92,13 @@ async function loadPatientList() {
         " (granted " +
         new Date(patient.granted_at).toLocaleDateString() +
         ")";
+		
+	  li.addEventListener("click", () => {
+		  window.location.href = `patient-details.html?id=${patient.id}`;
+		});
 
       list.appendChild(li);
+
     });
 
   } catch (err) {
@@ -50,4 +107,5 @@ async function loadPatientList() {
     list.innerHTML = "<li>Failed to load patients</li>";
 
   }
+
 }

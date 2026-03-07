@@ -9,7 +9,7 @@ function authenticateToken(req, res, next) {
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ message: 'Invalid token' });
 
-    req.user = { id: decoded.id };  // ✅ correct format
+    req.user = { id: decoded.id, role: decoded.role };  // ✅ correct format
 	// console.log('✅ Authenticated user:', req.user); // ⬅️ debug
     next();
   });
@@ -25,7 +25,7 @@ function authenticatePage(req, res, next) {
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.redirect('/login.html');
 
-    req.user = { id: decoded.id };
+    req.user = { id: decoded.id, role: decoded.role };
     next();
   });
 }
