@@ -25,7 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       localStorage.setItem("token", data.token);
-      window.location.href = "dashboard.html";
+	  localStorage.setItem("role", data.role);
+      localStorage.setItem("email", data.email);
+	  // Redirect based on role
+      if (data.role === "admin") {
+        window.location.href = "admin-dashboard.html";
+      } else if (data.role === "doctor") {
+        window.location.href = "doctor-dashboard.html";
+      } else {
+        window.location.href = "dashboard.html";
+      }
     } catch (err) {
       console.error(err);
       errorMessage.textContent = "An error occurred. Please try again.";

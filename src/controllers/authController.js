@@ -3,14 +3,14 @@ const { findUserByEmail, createUser } = require('../models/userModel');
 const logger = require('../utils/logger');
 
 async function register(req, res) {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
     // Basic validation
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
-
+	
+  try {
     // Check if user exists
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
@@ -37,21 +37,21 @@ async function register(req, res) {
 const jwt = require('jsonwebtoken');
 
 async function login(req, res) {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password)
+  if (!email || !password)
       return res.status(400).json({ message: 'Email and password are required' });
-
+  
+  try {
     const user = await findUserByEmail(email);
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ token });
+    res.json({ token, role: user.role, email: user.email });
   } catch (err) {
     logger.error('Registration error', {
 	  message: err.message,

@@ -2,18 +2,19 @@ const { saveFeedback } = require("../models/feedbackModel");
 const logger = require('../utils/logger');
 
 async function addFeedback(req, res) {
-  try {
-    const userId = req.user.id;
-    const { category, message } = req.body;
 	
-	if (!category) {
-      return res.status(400).json({ category: "Category required" });
-    }
+  const userId = req.user.id;
+  const { category, message } = req.body;
+	
+  if (!category) {
+	return res.status(400).json({ category: "Category required" });
+  }
 
-    if (!message) {
-      return res.status(400).json({ message: "Message required" });
-    }
-
+  if (!message) {
+    return res.status(400).json({ message: "Message required" });
+  }
+	
+  try {
     await saveFeedback(userId, category, message);
     res.status(201).json({ message: "✅ Feedback received. Thank you!" });
   } catch (err) {

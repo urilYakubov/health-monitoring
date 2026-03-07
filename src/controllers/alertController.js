@@ -6,7 +6,6 @@ async function listAlerts(req, res) {
     const alerts = await getAlertsByUser(req.user.id);
     res.json(alerts);
   } catch (err) {
-    console.error('Error fetching alerts:', err);
 	logger.error('Error fetching alerts', {
 	  message: err.message,
 	  stack: err.stack

@@ -849,6 +849,7 @@ fetchInsights();
 drawBloodPressureChart();
 loadVitalsSummary();
 loadBpMedicationEffectiveness();
+loadDoctorList();
 
 // FEEDBACK PAGE REDIRECT
 document.getElementById("feedbackBtn").addEventListener("click", () => {
@@ -872,4 +873,120 @@ document.getElementById("logoutBtn").addEventListener("click", logout);
 function logout() {
   localStorage.removeItem("token");
   window.location.replace("login.html");
+}
+
+
+/* ------------------ DATA SHARING ------------------ */
+
+document.getElementById("shareDoctorBtn")
+  ?.addEventListener("click", shareWithDoctor);
+
+async function shareWithDoctor() {
+  const emailInput = document.getElementById("doctorEmailInput");
+  const statusDiv = document.getElementById("shareStatus");
+  const email = emailInput.value.trim();
+
+  if (!email) {
+    statusDiv.innerText = "Please enter a doctor email.";
+    return;
+  }
+
+  statusDiv.innerText = "Processing...";
+
+  try {
+    const res = await fetch("/api/share-with-doctor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ doctorEmail: email })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      statusDiv.innerText = data.message || "Failed to grant access.";
+      return;
+    }
+
+    emailInput.value = "";
+    statusDiv.innerText = "✅ Access granted successfully.";
+
+    loadDoctorList();
+
+  } catch (err) {
+    statusDiv.innerText = "❌ Server error.";
+  }
+}
+
+
+async function loadDoctorList() {
+  const list = document.getElementById("doctorList");
+  if (!list) return;
+
+  list.innerHTML = "<li>Loading...</li>";
+
+  try {
+    const res = await fetch("/api/my-doctors", {
+      headers: { Authorization: "Bearer " + token }
+    });
+	console.log('res = ', res);
+
+    const doctors = await res.json();
+
+    if (!doctors.length) {
+      list.innerHTML = "<li>No doctors connected.</li>";
+      return;
+    }
+
+    list.innerHTML = "";
+
+    doctors.forEach(doc => {
+	  const li = document.createElement("li");
+
+	  // create email text
+	  const emailText = document.createTextNode(doc.email + " ");
+	  li.appendChild(emailText);
+
+	  // create button
+	  const button = document.createElement("button");
+	  button.textContent = "❌ Revoke";
+	  button.style.marginLeft = "10px";
+
+	  // attach click handler
+	  button.addEventListener("click", () => revokeDoctor(doc.id));
+
+	  // add button to li
+	  li.appendChild(button);
+
+	  // add li to list
+	  list.appendChild(li);
+	});
+
+  } catch (err) {
+    list.innerHTML = "<li>Failed to load doctors.</li>";
+  }
+}
+
+
+async function revokeDoctor(doctorId) {
+  if (!confirm("Are you sure you want to revoke access?")) return;
+
+  try {
+    const res = await fetch(`/api/revoke-doctor/${doctorId}`, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (res.ok) {
+      showToast("Access revoked");
+      loadDoctorList();
+    } else {
+      showToast("Failed to revoke access", "error");
+    }
+
+  } catch (err) {
+    showToast("Server error", "error");
+  }
 }

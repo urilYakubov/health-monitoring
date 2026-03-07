@@ -114,6 +114,10 @@ exports.getBpEffectiveness = async (req, res) => {
 
     res.json(data);
   } catch (err) {
+	logger.error('getBpEffectiveness error', {
+	  message: err.message,
+	  stack: err.stack
+	});
     res.status(500).json({
       error: "Failed to calculate medication effectiveness"
     });
