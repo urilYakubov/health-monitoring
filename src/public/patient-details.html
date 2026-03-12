@@ -16,25 +16,95 @@
 <div class="sidebar">
   <h2>🩺 Patient</h2>
 
-  <a href="doctor-dashboard.html" class="btn btn-secondary">⬅ Back to Patients</a>
+  <a href="doctor-dashboard.html" class="nav-btn">⬅ Back to Patients</a>
+  <button class="nav-btn active" data-page="insights">📋 Insights</button>
+  <button class="nav-btn" data-page="trends">📈 Trends</button>
+  <button class="nav-btn" data-page="symptoms">🩺 Symptoms</button>
   <button id="logoutBtn">🚪 Logout</button>
 </div>
 
 
 <div class="main">
 
-<h1 id="patientTitle">Patient Insights</h1>
+	<section id="insightsSection">
+		<h2>🧠 Health Insights</h2>
+		<div id="insightsLoading" class="loading">Analyzing your health data…</div>
+		<div id="insightsEmpty" class="empty-state hidden">
+			No insights yet. Add more data to unlock insights.
+		</div>
+		<div id="insightsGrid" class="insights-grid"></div>
+	</section>
 
-<div id="insightsLoading">Loading insights...</div>
+    <section id="clinicalSummaryContainer"></section>
+	
+	<div id="vitals-summary" class="summary-container">
+      <div class="summary-card">
+        <div class="summary-title">❤️ Mean Heart Rate</div>
+        <div id="meanHrValue">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-title">🚶 Activity</div>
+        <div id="stepsValue">—</div>
+      </div>
+    </div>
+	
+	
+	<!-- TRENDS PAGE -->
+    <div id="page-trends" class="hidden">
+		<h2>📈 Heart Rate Trend</h2>
+		<canvas id="heartRateChart" height="150"></canvas>
+		<hr style="margin:30px 0"/>
+		<h2>🩸 Blood Pressure Trend</h2>
+		<canvas id="bpChart" height="150"></canvas>
+		<hr style="margin:30px 0"/>
+		<div class="card medication-effectiveness">
+		<h3>💊 Medication Effectiveness (Blood Pressure)</h3>
+		<div id="bpMedicationEffectiveness"></div>
+		</div>
+    </div>
+	
+	
+	<!-- SYMPTOMS PAGE -->
+    <div id="page-symptoms" class="hidden">
+		<h2>🩺 Symptoms Tracking</h2>
 
-<div id="insightsEmpty" class="hidden">
-No insights available for this patient
+		<h3>Symptoms History</h3>
+		<table id="symptomsTable">
+		  <thead>
+			<tr>
+			  <th>Symptom</th>
+			  <th>Severity</th>
+			  <th>Notes</th>
+			  <th>Recorded At</th>
+			</tr>
+		  </thead>
+		  <tbody></tbody>
+		</table>
+
+		<hr style="margin:30px 0"/>
+
+		<h2>💊 Medications</h2>
+
+		<h3>Medication History</h3>
+		<table id="medicationsTable">
+		  <thead>
+			<tr>
+			  <th>Name</th>
+			  <th>Dose</th>
+			  <th>Frequency</th>
+			  <th>Started</th>
+			  <th>Ended</th>
+			</tr>
+		  </thead>
+		  <tbody></tbody>
+		</table>
+
+    </div>
+	
+	
+
 </div>
-
-<div id="insightsGrid" class="insight-grid"></div>
-
-</div>
-
+  
 <script src="js/patient-details.js"></script>
 
 </body>

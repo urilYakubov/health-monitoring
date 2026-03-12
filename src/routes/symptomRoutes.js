@@ -10,4 +10,10 @@ router.post('/', authenticateToken, symptomController.createSymptom);
 // GET all symptoms for logged-in user
 router.get('/', authenticateToken, symptomController.getSymptoms);
 
+router.get(
+  "/patient/:patientId",
+  authenticateToken,
+  symptomController.getSymptomsForPatient
+);
+
 module.exports = router;

@@ -86,14 +86,19 @@ async function loadPatientList() {
     patients.forEach(patient => {
 
       const li = document.createElement("li");
+	  li.className = "patient-row";
+	  
+	  li.innerHTML = `
+		<div class="patient-info">
+		  <strong>${patient.email}</strong>
+		  <span class="granted-date">
+			Granted ${new Date(patient.granted_at).toLocaleDateString()}
+		  </span>
+		</div>
+		<div class="patient-arrow">→</div>
+	  `;
 
-      li.textContent =
-        patient.email +
-        " (granted " +
-        new Date(patient.granted_at).toLocaleDateString() +
-        ")";
-		
-	  li.addEventListener("click", () => {
+      li.addEventListener("click", () => {
 		  window.location.href = `patient-details.html?id=${patient.id}`;
 		});
 

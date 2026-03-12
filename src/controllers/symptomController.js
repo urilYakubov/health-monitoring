@@ -73,3 +73,29 @@ exports.getSymptoms = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.getSymptomsForPatient = async (req, res) => {
+
+  const doctorId = req.user.id;
+  const patientId = req.params.patientId;
+
+  try {
+
+    const symptoms = await symptomService.getSymptoms(patientId);
+
+    res.json(symptoms);
+
+  } catch (err) {
+
+    logger.error('getSymptomsForPatient error', {
+      doctorId,
+      patientId,
+      message: err.message,
+      stack: err.stack
+    });
+
+    res.status(500).json({ message: 'Server error' });
+
+  }
+
+};

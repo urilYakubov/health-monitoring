@@ -124,3 +124,76 @@ exports.getBpEffectiveness = async (req, res) => {
   }
 };
 
+exports.getBpMedicationContextForPatient = async (req, res) => {
+
+  const doctorId = req.user.id;
+  const patientId = req.params.patientId;
+  
+
+  try {
+
+    const meds = await medicationService.getBpContext(patientId);
+
+    res.json(meds);
+
+  } catch (err) {
+
+    logger.error("getBpMedicationContextForPatient error", {
+      doctorId,
+      patientId,
+      message: err.message,
+      stack: err.stack
+    });
+
+    res.status(500).json({
+      error: "Failed to load BP medication context"
+    });
+
+  }
+
+};
+
+exports.getBpEffectivenessForPatient = async (req, res) => {
+  
+  const doctorId = req.user.id;
+  const patientId = req.params.patientId;
+  
+  try {
+    const data =
+      await medicationService.getBpEffectiveness(
+        patientId
+      );
+
+    res.json(data);
+  } catch (err) {
+	logger.error('getBpEffectivenessForPatient error', {
+	  message: err.message,
+	  stack: err.stack,
+	  doctorId,
+	  patientId
+	});
+    res.status(500).json({
+      error: "Failed to calculate medication effectiveness for patient"
+    });
+  }
+};
+
+exports.getMedicationsForPatient = async (req, res) => {
+	
+  const doctorId = req.user.id;
+  const patientId = req.params.patientId;
+	
+  try {
+    const meds = await medicationService.getMedications(patientId);
+    res.json(meds);
+  } catch (err) {
+	logger.error('getMedicationsForPatient error', {
+	  message: err.message,
+	  stack: err.stack,
+	  doctorId,
+	  patientId
+	});
+    res.status(500).json({ error: "Failed to load medications" });
+  }
+};
+
