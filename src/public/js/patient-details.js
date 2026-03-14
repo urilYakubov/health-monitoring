@@ -278,10 +278,16 @@ function renderClinicalSummaryCard(summary) {
         to support clinical evaluation. It does not replace medical judgment.
       </p>
 
-      <button onclick="printDoctorSummary()">Print Summary</button>
+	  <button id="printSummaryBtn">Print Summary</button>
 
     </div>
   `;
+  
+    // Attach event safely (CSP compliant)
+	const btn = document.getElementById("printSummaryBtn");
+	if (btn) {
+		btn.addEventListener("click", printDoctorSummary);
+	}
 }
 
 function printDoctorSummary() {
