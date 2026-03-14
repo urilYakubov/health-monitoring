@@ -6,6 +6,8 @@ const { buildClinicalSummaryCard } = require("../utils/clinicalSummaryCard");
 const { interpretBpDiurnal } = require("../utils/interpreters/bloodPressureDiurnal");
 const { computeBpTrend } = require("./bpTrendService");
 const { interpretBpTrend } = require("../utils/interpreters/bloodPressureTrend");
+const { computeBpStatus } = require("./bpStatusService");
+const { interpretBpStatus } = require("../utils/interpreters/bloodPressureStatus");
 
 
 async function buildBpVariabilityInsight({ userId, from, to }) {
@@ -152,6 +154,14 @@ async function getInsightCards(userId, startDate, endDate) {
   if (systolicTrend && systolicTrend.confidence !== "low") {
 	  const trendInsight = interpretBpTrend(systolicTrend);
 	  if (trendInsight) insights.push(trendInsight);
+  }
+  
+  // BP Status Insight
+  const bpStatus = await computeBpStatus({ userId });
+  const statusInsight = interpretBpStatus(bpStatus);
+
+  if (statusInsight) {
+	insights.push(statusInsight);
   }
 
 

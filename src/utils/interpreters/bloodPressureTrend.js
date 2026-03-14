@@ -33,6 +33,7 @@ exports.interpretBpTrend = (trend) => {
     title: `Blood Pressure Trend (${label})`,
     icon: "📈",
     confidence: trend.confidence,
+	windowDays,
     message,
     details: {
       fromAvg: Math.round(details.fromAvg),

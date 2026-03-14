@@ -132,11 +132,30 @@ async function fetchPatientInsights() {
           <div class="insight-confidence">
             Confidence: ${i.confidence}
           </div>
+		  <div class="insight-metric">
+			  Trend Window: Last ${i.windowDays} days
+			</div>
           <div class="insight-metric">
             ${i.message}
           </div>
         `;
       }
+	  
+	  // ---------------- BP STATUS ----------------
+	  else if (i.type === "bp_status") {
+		card.innerHTML = `
+			<div class="insight-title">📈 Blood Pressure Status</div>			
+			<div class="insight-metric">
+			  Trend Window: Last ${i.details.windowDays} days
+			</div>
+			<div class="insight-metric">
+			  ${i.icon} ${i.status}
+			</div>
+			<div class="insight-metric">
+			  ${i.message}
+			</div>
+		`;
+	  }
 
       /* -------- BP VARIABILITY -------- */
 
