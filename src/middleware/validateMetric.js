@@ -3,10 +3,11 @@
 const VALID_RANGES = {
   heart_rate: { min: 30, max: 220 },
   temperature: { min: 34, max: 42 },
-  glucose: { min: 40, max: 600 },
+  blood_sugar: { min: 40, max: 600 },
   blood_pressure_systolic: { min: 70, max: 250 },
   blood_pressure_diastolic: { min: 40, max: 150 },
-  steps: { min: 0, max: 50000 }
+  steps: { min: 0, max: 50000 },
+  weight: { min: 30, max: 300 }
 };
 
 function validateMetric(req, res, next) {

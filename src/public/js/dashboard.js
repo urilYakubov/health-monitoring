@@ -875,6 +875,7 @@ drawBloodPressureChart();
 loadVitalsSummary();
 loadBpMedicationEffectiveness();
 loadDoctorList();
+loadSettings();
 
 // FEEDBACK PAGE REDIRECT
 document.getElementById("feedbackBtn").addEventListener("click", () => {
@@ -1015,3 +1016,48 @@ async function revokeDoctor(doctorId) {
     showToast("Server error", "error");
   }
 }
+
+async function loadSettings() {
+  try {
+    const res = await fetch("/api/preferences", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    document.getElementById("weightUnit").value = data.weight_unit;
+    document.getElementById("temperatureUnit").value = data.temperature_unit;
+
+  } catch (err) {
+    console.error("Failed to load settings", err);
+  }
+}
+
+document.getElementById("settingsForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const weight_unit = document.getElementById("weightUnit").value;
+  const temperature_unit = document.getElementById("temperatureUnit").value;
+
+  try {
+    const res = await fetch("/api/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ weight_unit, temperature_unit })
+    });
+	
+	const text = await res.text();
+
+    if (!res.ok) throw new Error();
+
+    document.getElementById("settingsMessage").innerText = "✅ Settings saved";
+
+  } catch (err) {
+    document.getElementById("settingsMessage").innerText = "❌ Failed to save";
+  }
+});

@@ -16,6 +16,7 @@
   <button class="nav-btn" data-page="trends">📈 Trends</button>
   <button class="nav-btn" data-page="alerts">🚨 Alerts</button>
   <button class="nav-btn" data-page="symptoms">🩺 Symptoms</button>
+  <button class="nav-btn" data-page="settings">⚙️ Settings</button>
   <button id="feedbackBtn">💬 Feedback</button>
   <button id="logoutBtn">🚪 Logout</button>
 </div>
@@ -38,6 +39,7 @@
           <option value="heart_rate">Heart Rate</option>
           <option value="blood_sugar">Blood Sugar</option>
           <option value="steps">Steps</option>
+		  <option value="weight">Weight</option>
         </select>
       </label>
       <label>Value:
@@ -240,6 +242,36 @@
     </table>
 
   </div>
+  
+  <!-- SETTINGS PAGE -->
+  <div id="page-settings" class="hidden">
+	  <h2>⚙️ User Settings</h2>
+
+	  <form id="settingsForm">
+		
+		<label>Weight Unit:</label>
+		<select id="weightUnit">
+		  <option value="kg">Kilograms (kg)</option>
+		  <option value="lbs">Pounds (lbs)</option>
+		</select>
+
+		<br/><br/>
+
+		<label>Temperature Unit:</label>
+		<select id="temperatureUnit">
+		  <option value="C">Celsius (°C)</option>
+		  <option value="F">Fahrenheit (°F)</option>
+		</select>
+
+		<br/><br/>
+
+		<button type="submit">💾 Save Settings</button>
+
+	  </form>
+
+	  <div id="settingsMessage"></div>
+  </div>
+  
 
 </div>
 

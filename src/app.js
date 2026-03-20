@@ -113,6 +113,9 @@ app.use("/api", consentRoutes);
 const doctorRoutes = require('./routes/doctorRoutes');
 app.use("/api", doctorRoutes);
 
+const preferencesRoutes = require("./routes/preferencesRoutes");
+app.use("/api/preferences", preferencesRoutes);
+
 // ---- GLOBAL ERROR HANDLER ----
 app.use((err, req, res, next) => {
   logger.error("Unhandled error", {
