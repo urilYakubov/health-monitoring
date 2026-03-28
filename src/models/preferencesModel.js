@@ -18,19 +18,20 @@ exports.createDefault = async (userId) => {
   return res.rows[0];
 };
 
-exports.upsert = async ({ userId, weight_unit, temperature_unit }) => {
+exports.upsert = async ({ userId, weight_unit, temperature_unit, timezone }) => {
   const res = await db.query(
     `
-    INSERT INTO user_preferences (user_id, weight_unit, temperature_unit)
-    VALUES ($1, $2, $3)
+    INSERT INTO user_preferences (user_id, weight_unit, temperature_unit, timezone)
+    VALUES ($1, $2, $3, $4)
     ON CONFLICT (user_id)
     DO UPDATE SET
       weight_unit = EXCLUDED.weight_unit,
       temperature_unit = EXCLUDED.temperature_unit,
+      timezone = EXCLUDED.timezone,
       updated_at = NOW()
     RETURNING *
     `,
-    [userId, weight_unit, temperature_unit]
+    [userId, weight_unit, temperature_unit, timezone]
   );
 
   return res.rows[0];

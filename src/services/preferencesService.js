@@ -11,10 +11,11 @@ exports.getPreferences = async (userId) => {
   return prefs;
 };
 
-exports.savePreferences = async ({ userId, weight_unit, temperature_unit }) => {
+exports.savePreferences = async ({ userId, weight_unit, temperature_unit, timezone }) => {
   return await preferencesModel.upsert({
     userId,
     weight_unit,
-    temperature_unit
+    temperature_unit,
+    timezone
   });
 };

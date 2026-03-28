@@ -42,10 +42,6 @@ process.on("unhandledRejection", (reason) => {
 
 // ---- DATABASE ----
 require('./config/db');
-const initDb = require('./config/dbInit');
-initDb()
-  .then(() => console.log("✅ Database initialized"))
-  .catch(err => console.error("❌ DB init failed:", err));
 
 // ---- STATIC FILES ----
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
@@ -116,6 +112,9 @@ app.use("/api", doctorRoutes);
 const preferencesRoutes = require("./routes/preferencesRoutes");
 app.use("/api/preferences", preferencesRoutes);
 
+const clinicalRoutes = require('./routes/clinicalProfileRoutes');
+app.use('/clinical-profile', clinicalRoutes);
+
 // ---- GLOBAL ERROR HANDLER ----
 app.use((err, req, res, next) => {
   logger.error("Unhandled error", {
@@ -131,8 +130,4 @@ app.use((err, req, res, next) => {
 });
 
 
-// ---- START SERVER ----
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
-
-console.log('App started');
+module.exports = app;

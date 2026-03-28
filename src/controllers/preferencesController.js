@@ -11,13 +11,14 @@ exports.getPreferences = async (req, res) => {
 
 exports.savePreferences = async (req, res) => {
   const userId = req.user.id;
-  const { weight_unit, temperature_unit } = req.body;
+  const { weight_unit, temperature_unit, timezone } = req.body;
   
   try {
 	  const prefs = await preferencesService.savePreferences({
 		userId,
 		weight_unit,
-		temperature_unit
+		temperature_unit,
+		timezone
 	  });
 	  
 	  await logAudit({
@@ -27,7 +28,8 @@ exports.savePreferences = async (req, res) => {
 		  entityId: prefs?.id ?? null,
 		  details: {
 			weight_unit,
-			temperature_unit
+			temperature_unit,
+			timezone
 		  }
 		});
 
@@ -38,7 +40,8 @@ exports.savePreferences = async (req, res) => {
 		  stack: err.stack,
 		  userId,
 		  weight_unit,
-		  temperature_unit
+		  temperature_unit,
+		  timezone
 		});
 
 		await logAudit({
@@ -48,6 +51,7 @@ exports.savePreferences = async (req, res) => {
 		  details: {
 			weight_unit,
 			temperature_unit,
+			timezone,
 			error: err.message
 		  }
 		});

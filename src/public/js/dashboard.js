@@ -876,6 +876,7 @@ loadVitalsSummary();
 loadBpMedicationEffectiveness();
 loadDoctorList();
 loadSettings();
+loadClinicalProfile();
 
 // FEEDBACK PAGE REDIRECT
 document.getElementById("feedbackBtn").addEventListener("click", () => {
@@ -1029,6 +1030,7 @@ async function loadSettings() {
 
     document.getElementById("weightUnit").value = data.weight_unit;
     document.getElementById("temperatureUnit").value = data.temperature_unit;
+	document.getElementById("timezone").value = data.timezone || "UTC";
 
   } catch (err) {
     console.error("Failed to load settings", err);
@@ -1040,6 +1042,7 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
 
   const weight_unit = document.getElementById("weightUnit").value;
   const temperature_unit = document.getElementById("temperatureUnit").value;
+  const timezone = document.getElementById("timezone").value;
 
   try {
     const res = await fetch("/api/preferences", {
@@ -1048,7 +1051,7 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
         "Content-Type": "application/json",
         Authorization: "Bearer " + token
       },
-      body: JSON.stringify({ weight_unit, temperature_unit })
+      body: JSON.stringify({ weight_unit, temperature_unit, timezone })
     });
 	
 	const text = await res.text();
@@ -1061,3 +1064,79 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
     document.getElementById("settingsMessage").innerText = "❌ Failed to save";
   }
 });
+
+async function loadClinicalProfile() {
+  try {
+    const res = await fetch("/clinical-profile", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    document.getElementById("dob").value =
+  data.date_of_birth ? data.date_of_birth.split("T")[0] : "";
+    document.getElementById("sex").value = data.sex || "";
+    document.getElementById("height").value = data.height_cm || "";
+    document.getElementById("baseline_weight").value = data.baseline_weight || "";
+    document.getElementById("nyha_class").value = data.nyha_class || "";
+    document.getElementById("lvef").value = data.lvef || "";
+    document.getElementById("diabetes").value =
+      data.diabetes === null ? "" : String(data.diabetes);
+    document.getElementById("smoker").value =
+      data.smoker === null ? "" : String(data.smoker);
+    document.getElementById("doctor_email").value = data.doctor_email || "";
+    document.getElementById("care_team_email").value = data.care_team_email || "";
+	document.getElementById("hospitalisations").value =
+  data.hospitalisations ?? "";
+
+  } catch (err) {
+    console.error("Failed to load clinical profile", err);
+  }
+}
+
+document.getElementById("clinicalForm")
+  ?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      date_of_birth: document.getElementById("dob").value || null,
+      sex: document.getElementById("sex").value || null,
+      height_cm: Number(document.getElementById("height").value) || null,
+      baseline_weight: Number(document.getElementById("baseline_weight").value) || null,
+      nyha_class: document.getElementById("nyha_class").value || null,
+      lvef: Number(document.getElementById("lvef").value) || null,
+      diabetes: parseBoolean(document.getElementById("diabetes").value),
+      smoker: parseBoolean(document.getElementById("smoker").value),
+      doctor_email: document.getElementById("doctor_email").value || null,
+      care_team_email: document.getElementById("care_team_email").value || null,
+      hospitalisations: Number(document.getElementById("hospitalisations").value) || 0
+    };
+
+    try {
+      const res = await fetch("/clinical-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error();
+
+      document.getElementById("clinicalMessage").innerText =
+        "✅ Clinical profile saved";
+
+    } catch (err) {
+      document.getElementById("clinicalMessage").innerText =
+        "❌ Failed to save";
+    }
+});
+
+function parseBoolean(value) {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return null;
+}
