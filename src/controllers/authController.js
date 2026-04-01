@@ -3,12 +3,16 @@ const { findUserByEmail, createUser } = require('../models/userModel');
 const logger = require('../utils/logger');
 
 async function register(req, res) {
-  const { email, password } = req.body;
+  const { email, password, first_name, last_name } = req.body;
+  
+  console.log("register");
 
-    // Basic validation
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
+  // Validation
+  if (!email || !password || !first_name || !last_name) {
+    return res.status(400).json({
+      message: 'Email, password, first name and last name are required'
+    });
+  }
 	
   try {
     // Check if user exists
@@ -21,9 +25,9 @@ async function register(req, res) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
-    const user = await createUser(email, hashedPassword);
+    const user = await createUser(email, hashedPassword, first_name, last_name);
 
-    res.status(201).json({ id: user.id, email: user.email });
+    res.status(201).json({ id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name });
   } catch (err) {
     logger.error('Registration error', {
 	  message: err.message,
