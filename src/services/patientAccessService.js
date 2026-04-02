@@ -1,14 +1,23 @@
 const patientAccessModel = require("../models/patientAccessModel");
+const riskScoreService = require("./riskScoreService");
 
-async function fetchPatientsForDoctor(doctorId) {
+async function getPatientsWithRisk(doctorId) {
+  const patients = await patientAccessModel.getPatientsForDoctor(doctorId);
 
-  if (!doctorId) {
-    throw new Error("Invalid doctor id");
-  }
+  const enriched = patients.map((p) => {
+    const risk = riskScoreService.calculateRisk(p); // no await needed if sync
 
-  return await patientAccessModel.getPatientsForDoctor(doctorId);
+    return {
+      ...p,
+      risk_score: risk.score,
+      risk_level: risk.level,
+      risk_reasons: risk.reasons
+    };
+  });
+
+  return enriched.sort((a, b) => b.risk_score - a.risk_score);
 }
 
 module.exports = {
-  fetchPatientsForDoctor
+  getPatientsWithRisk
 };

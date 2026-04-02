@@ -80,22 +80,56 @@ async function loadPatientList() {
       list.innerHTML = "<li>No patients connected.</li>";
       return;
     }
+	
+	patients.sort((a, b) => b.riskScore - a.riskScore);
 
     list.innerHTML = "";
 
     patients.forEach(patient => {
 
       const li = document.createElement("li");
-	  li.className = "patient-row";
-	  
+	  li.className = "patient-card";
+
+	  const status = getStatus(patient.risk_score);
+
 	  li.innerHTML = `
-		<div class="patient-info">
-		  <strong>${patient.email}</strong>
-		  <span class="granted-date">
-			Granted ${new Date(patient.granted_at).toLocaleDateString()}
-		  </span>
+		<div class="card-left ${status.color}"></div>
+
+		<div class="card-content">
+		  
+		  <div class="card-header">
+			<div>
+			  <strong>${patient.first_name} ${patient.last_name}</strong>
+			  <span>
+				${patient.sex || ""}, ${getAge(patient.date_of_birth)} · NYHA ${patient.nyha_class || "-"}
+			  </span>
+			  <div class="sub">
+				${patient.email} · Granted ${formatDate(patient.granted_at)}
+			  </div>
+			</div>
+
+			<div class="risk-box">
+			  <div class="risk-score">${patient.risk_score}</div>
+			  <div class="risk-label">risk / 100</div>
+			  <div class="risk-action">${status.label}</div>
+			</div>
+		  </div>
+		  
+		  <div class="metrics">
+			  <span>Systolic <b>${patient.systolic || "-"}</b> mmHg</span>
+
+			  <span>
+				Weight 
+				<b>${getWeightDisplay(patient.current_weight, patient.baseline_weight)}</b>
+				vs baseline
+			  </span>
+
+			  <span>HR <b>${patient.heart_rate || "-"}</b> bpm</span>
+			  
+			  <span><b>${patient.alerts_count}</b> alerts</span>
+		  </div>
+
 		</div>
-		<div class="patient-arrow">→</div>
 	  `;
 
       li.addEventListener("click", () => {
@@ -114,3 +148,36 @@ async function loadPatientList() {
   }
 
 }
+
+function getAge(dob) {
+  if (!dob) return "-";
+  const diff = Date.now() - new Date(dob).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString();
+}
+
+function getStatus(score) {
+  if (score >= 70) return { label: "Call today", color: "red" };
+  if (score >= 40) return { label: "Monitor", color: "orange" };
+  return { label: "Stable", color: "green" };
+}
+
+function getWeightDisplay(current, baseline) {
+  if (!current || !baseline) return "-";
+
+  const curr = Number(current);
+  const base = Number(baseline);
+
+  if (isNaN(curr) || isNaN(base)) return "-";
+
+  const diff = curr - base;
+  const sign = diff >= 0 ? "+" : "";
+
+  return `${sign}${diff.toFixed(1)} kg`;
+}
+
+
+
