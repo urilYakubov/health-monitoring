@@ -81,7 +81,7 @@ async function loadPatientList() {
       return;
     }
 	
-	patients.sort((a, b) => b.riskScore - a.riskScore);
+	patients.sort((a, b) => b.risk_score - a.risk_score);
 
     list.innerHTML = "";
 
@@ -127,10 +127,29 @@ async function loadPatientList() {
 			  <span>HR <b>${patient.heart_rate || "-"}</b> bpm</span>
 			  
 			  <span><b>${patient.alerts_count}</b> alerts</span>
+			  
+			  ${
+				patient.alerts_count > 0
+				  ? `<button class="ack-btn" data-id="${patient.id}">
+					   ✅ Acknowledge Alerts
+					 </button>`
+				  : ""
+			  }
+			  
 		  </div>
 
 		</div>
 	  `;
+	  
+	  // attach button event 
+	  li.querySelectorAll(".ack-btn").forEach(btn => {
+		btn.addEventListener("click", async (e) => {
+		  e.stopPropagation();
+
+		  const patientId = btn.dataset.id;
+		  await acknowledgePatientAlerts(patientId);
+		});
+	  });
 
       li.addEventListener("click", () => {
 		  window.location.href = `patient-details.html?id=${patient.id}`;
@@ -179,5 +198,25 @@ function getWeightDisplay(current, baseline) {
   return `${sign}${diff.toFixed(1)} kg`;
 }
 
+async function acknowledgePatientAlerts(patientId) {
+  try {
+    const res = await fetch(`/api/patients/${patientId}/acknowledge-alerts`, {
+      method: "PATCH",
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    if (!res.ok) throw new Error();
+
+    alert("✅ Alerts acknowledged");
+
+    loadPatientList(); // 🔄 refresh UI
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to acknowledge alerts");
+  }
+}
 
 

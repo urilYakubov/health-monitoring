@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const logger = require('../utils/logger');
+const alertModel = require("../models/alertModel");
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -34,4 +35,25 @@ async function sendHealthAlertEmail({ to, subject, message }) {
   }
 }
 
-module.exports = { sendHealthAlertEmail };
+async function acknowledgeAlert(alertId, doctorId) {
+  if (!alertId || !doctorId) {
+    throw new Error("Invalid input");
+  }
+
+  return await alertModel.acknowledge(alertId, doctorId);
+}
+
+async function acknowledgeAllForPatient(patientId, doctorId) {
+  if (!patientId) {
+    throw new Error("Patient ID is required");
+  }
+
+  const updated = await alertModel.acknowledgeAllForPatient(patientId, doctorId);
+
+  return {
+    message: "Alerts acknowledged",
+    updated_count: updated.rowCount
+  };
+}
+
+module.exports = { sendHealthAlertEmail, acknowledgeAlert, acknowledgeAllForPatient };

@@ -45,7 +45,9 @@ async function getPatientsForDoctor(doctorId) {
 	  (
 		SELECT COUNT(*)
 		FROM alerts a
-		WHERE a.user_id = u.id
+		WHERE a.user_id = u.id 
+		AND a.created_at > NOW() - INTERVAL '7 days'
+		AND a.acknowledged_at IS NULL
 	  ) as alerts_count
 
 	FROM patient_consents pc

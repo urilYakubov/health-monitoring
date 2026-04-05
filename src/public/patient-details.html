@@ -20,6 +20,7 @@
   <button class="nav-btn active" data-page="insights">📋 Insights</button>
   <button class="nav-btn" data-page="trends">📈 Trends</button>
   <button class="nav-btn" data-page="symptoms">🩺 Symptoms</button>
+  <button class="nav-btn" data-page="alerts">🚨 Alerts</button>
   <button id="logoutBtn">🚪 Logout</button>
 </div>
 
@@ -101,6 +102,25 @@
 
     </div>
 	
+	
+	<!-- ALERTS PAGE -->
+	<div id="page-alerts" class="hidden">
+	  <h2>🚨 Patient Alerts</h2>
+
+	  <table id="alertsTable">
+		<thead>
+		  <tr>
+			<th>Metric</th>
+			<th>Value</th>
+			<th>Reason</th>
+			<th>Time</th>
+			<th>Status</th>
+			<th>Action</th>
+		  </tr>
+		</thead>
+		<tbody></tbody>
+	  </table>
+	</div>
 	
 
 </div>

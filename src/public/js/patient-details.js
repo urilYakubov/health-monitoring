@@ -52,6 +52,10 @@ document.querySelectorAll(".nav-btn[data-page]").forEach(btn => {
     } else {
       document.getElementById("page-" + page).classList.remove("hidden");
     }
+	
+	if (page === "alerts") {
+      fetchAlerts(patientId);
+    }
 
   });
 
@@ -693,5 +697,95 @@ async function fetchMedications(patientId) {
         </td>
       </tr>
     `;
+  }
+}
+
+
+async function fetchAlerts(patientId) {
+  const tbody = document.querySelector("#alertsTable tbody");
+
+  tbody.innerHTML = `
+    <tr><td colspan="6">Loading alerts...</td></tr>
+  `;
+
+  try {
+    const res = await fetch(`/api/patients/${patientId}/alerts`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const alerts = await res.json();
+
+    tbody.innerHTML = "";
+
+    if (!alerts.length) {
+      tbody.innerHTML = `
+        <tr><td colspan="6">No alerts</td></tr>
+      `;
+      return;
+    }
+
+    alerts.forEach(a => {
+      const isAcknowledged = !!a.acknowledged_at;
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${a.metric_type}</td>
+        <td>${a.value}</td>
+        <td>${a.reason || ""}</td>
+        <td>${new Date(a.created_at).toLocaleString()}</td>
+        <td>
+          ${isAcknowledged ? "✅ Acknowledged" : "❗ Active"}
+        </td>
+        <td>
+          ${
+            !isAcknowledged
+              ? `<button class="ack-one-btn" data-id="${a.id}">
+                   Acknowledge
+                 </button>`
+              : "-"
+          }
+        </td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+    // attach listeners
+    document.querySelectorAll(".ack-one-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+
+        const alertId = btn.dataset.id;
+        await acknowledgeSingleAlert(alertId);
+      });
+    });
+
+  } catch (err) {
+    tbody.innerHTML = `
+      <tr><td colspan="6">Failed to load alerts</td></tr>
+    `;
+  }
+}
+
+
+async function acknowledgeSingleAlert(alertId) {
+  try {
+    const res = await fetch(`/api/alerts/${alertId}/acknowledge`, {
+      method: "PATCH",
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    if (!res.ok) throw new Error();
+
+    alert("✅ Alert acknowledged");
+
+    fetchAlerts(patientId); // refresh table
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to acknowledge alert");
   }
 }
