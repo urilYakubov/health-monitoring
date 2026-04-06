@@ -53,6 +53,9 @@ async function detectHealthTrend({ userId, metricType, currentValue }) {
   const anomaly = detectAnomaly(recentValues, currentValue);
   if (!anomaly.isAnomaly) return;
   
+  // ✅ Direction logic
+  const direction = anomaly.zScore > 0 ? 'rising' : 'falling';
+  
   // ✅ Save anomaly record
 	await logAnomaly({
 	  userId,
@@ -64,7 +67,7 @@ async function detectHealthTrend({ userId, metricType, currentValue }) {
 	  threshold: anomaly.threshold
 	});
 
-  const alertReason = `Abnormal ${metricType} trend (Z-score: ${anomaly.zScore.toFixed(2)})`;
+  const alertReason = `Abnormal ${metricType} trend — ${direction} (Z-score: ${anomaly.zScore.toFixed(2)})`;
   console.error('alert for detectHealthTrend:', alertReason);
 
   await addAlert({
@@ -82,6 +85,7 @@ async function detectHealthTrend({ userId, metricType, currentValue }) {
     <strong>Abnormal trend detected</strong><br>
     Metric: <b>${metricType}</b><br>
     Value: <b>${currentValue}</b><br>
+	Direction: <b>${direction}</b><br>
     Z-score: <b>${anomaly.zScore.toFixed(2)}</b><br>
     Time: ${new Date().toLocaleString()}<br>
     <br>
