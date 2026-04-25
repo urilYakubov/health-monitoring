@@ -111,7 +111,7 @@ async function loadPatientList() {
 			<div class="risk-box">
 			  <div class="risk-score">${patient.risk_score}</div>
 			  <div class="risk-label">risk / 100</div>
-			  <div class="risk-action">${status.label}</div>
+			  <div class="risk-action">${patient.risk_action || status.label}</div>
 			</div>
 		  </div>
 		  

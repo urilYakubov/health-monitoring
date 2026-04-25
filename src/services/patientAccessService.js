@@ -5,13 +5,14 @@ async function getPatientsWithRisk(doctorId) {
   const patients = await patientAccessModel.getPatientsForDoctor(doctorId);
 
   const enriched = patients.map((p) => {
-    const risk = riskScoreService.calculateRisk(p); // no await needed if sync
+    const risk = riskScoreService.calculateRiskV2(p); // no await needed if sync
 
     return {
       ...p,
       risk_score: risk.score,
       risk_level: risk.level,
-      risk_reasons: risk.reasons
+      risk_reasons: risk.reasons,
+	  risk_action: risk.action
     };
   });
 
