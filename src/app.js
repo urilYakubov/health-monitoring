@@ -65,6 +65,9 @@ app.get("/dashboard.html", authenticatePage, (req, res) => {
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
+const adminRoutes = require('./routes/adminRoutes');
+app.use("/api", adminRoutes);
+
 const protectedRoutes = require('./routes/protectedRoutes');
 app.use('/api', authenticateToken, protectedRoutes);
 
